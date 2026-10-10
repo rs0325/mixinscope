@@ -10,9 +10,11 @@ import java.util.function.UnaryOperator;
 /** Conservative matching on original bytecode; unsupported points never become verified. */
 public final class InstructionMatcher {
     private InstructionMatcher() {}
-    public static void resolve(MethodNode method, Modification modification, Target target, TinyMappings mappings, UnaryOperator<String> references, Report report) {
+    public static void resolve(MethodNode method, Modification modification, Target target, TinyMappings mappings, UnaryOperator<String> references, Report report,Runnable checkBudget) {
+        checkBudget.run();
         List<AbstractInsnNode> code = new ArrayList<>();
-        for (AbstractInsnNode instruction : method.instructions) if (instruction.getOpcode() >= 0) code.add(instruction);
+        int visited=0;
+        for (AbstractInsnNode instruction : method.instructions) {if((++visited&1023)==0)checkBudget.run();if (instruction.getOpcode() >= 0) code.add(instruction);}
         if (code.isEmpty()) { report.diagnostic("REFERENCE_BODY_UNAVAILABLE", modification.id, "Method has no reference instruction body", false); return; }
         if (modification.kind.equals("Overwrite") || modification.kind.equals("WrapMethod")) return;
         if (modification.at.isEmpty()) { report.diagnostic("INJECTION_POINT_MISSING", modification.id, "No supported @At metadata", false); return; }
@@ -20,17 +22,18 @@ public final class InstructionMatcher {
         Set<Integer> matches = new TreeSet<>();
         try {
             for (Map<String, Object> at : modification.normalizedAt) {
+                checkBudget.run();
                 String sliceId = Util.str(at.get("slice"), "");
                 int low = 0, high = code.size() - 1;
                 List<Map<String, Object>> slices = modification.normalizedSlices;
                 Map<String, Object> slice = slices.stream().filter(s -> Util.str(s.get("id"), "").equals(sliceId)).findFirst().orElse(Map.of());
                 if (!sliceId.isEmpty() && slice.isEmpty()) throw new IllegalArgumentException("Unknown slice: " + sliceId);
                 if (!slice.isEmpty()) {
-                    low = boundary(Util.map(slice.get("from")), code, 0, modification, null, UnaryOperator.identity());
-                    high = boundary(Util.map(slice.get("to")), code, code.size() - 1, modification, null, UnaryOperator.identity());
+                    low = boundary(Util.map(slice.get("from")), code, 0, modification, null, UnaryOperator.identity(),checkBudget);
+                    high = boundary(Util.map(slice.get("to")), code, code.size() - 1, modification, null, UnaryOperator.identity(),checkBudget);
                     if (low > high) throw new IllegalArgumentException("Invalid slice boundaries");
                 }
-                for (int index : point(at, code, low, high, modification, null, UnaryOperator.identity())) matches.add(index);
+                for (int index : point(at, code, low, high, modification, null, UnaryOperator.identity(),checkBudget)) matches.add(index);
             }
             target.instructions = new ArrayList<>(matches); target.instructionsVerified = true;
             if (matches.isEmpty()) report.diagnostic("INJECTION_POINT_NO_MATCH", modification.id,
@@ -46,13 +49,14 @@ public final class InstructionMatcher {
             report.diagnostic("INJECTION_POINT_UNSUPPORTED", modification.id, ex.getMessage(), false);
         }
     }
-    private static int boundary(Map<String, Object> at, List<AbstractInsnNode> code, int fallback, Modification m, TinyMappings mappings, UnaryOperator<String> references) {
+    private static int boundary(Map<String, Object> at, List<AbstractInsnNode> code, int fallback, Modification m, TinyMappings mappings, UnaryOperator<String> references,Runnable checkBudget) {
         if (at.isEmpty()) return fallback;
-        List<Integer> result = point(at, code, 0, code.size() - 1, m, mappings, references);
+        List<Integer> result = point(at, code, 0, code.size() - 1, m, mappings, references,checkBudget);
         if (result.size() != 1) throw new IllegalArgumentException("Slice boundary is not unique");
         return result.getFirst();
     }
-    private static List<Integer> point(Map<String, Object> at, List<AbstractInsnNode> code, int low, int high, Modification m, TinyMappings mappings, UnaryOperator<String> references) {
+    private static List<Integer> point(Map<String, Object> at, List<AbstractInsnNode> code, int low, int high, Modification m, TinyMappings mappings, UnaryOperator<String> references,Runnable checkBudget) {
+        PointValidation.validate(at);
         String kind = Util.str(at.get("value"), "");
         if (!Util.list(at.get("args")).isEmpty()) throw new IllegalArgumentException("Injection-point args are not supported: " + kind);
         String rawTarget = Util.str(at.get("target"), "");
@@ -71,6 +75,7 @@ public final class InstructionMatcher {
         if (kind.equals("NEW") && (rawTarget.isEmpty() || rawTarget.contains("("))) throw new IllegalArgumentException("NEW constructor-descriptor queries are unsupported; use class owner");
         List<Integer> matches = new ArrayList<>();
         for (int i = Math.max(0, low); i <= high && i < code.size(); i++) {
+            if((i&1023)==0)checkBudget.run();
             AbstractInsnNode instruction = code.get(i); int op = instruction.getOpcode();
             boolean match = switch (kind) {
                 case "HEAD" -> i == low;
@@ -111,8 +116,10 @@ public final class InstructionMatcher {
         int by = switch (shift) { case "NONE" -> 0; case "BEFORE" -> -1; case "AFTER" -> 1; case "BY" -> Util.integer(at.get("by"), 0); default -> throw new IllegalArgumentException("Unknown shift"); };
         List<Integer> shifted = new ArrayList<>();
         for (int i : matches) {
+            checkBudget.run();
             AbstractInsnNode cursor = code.get(i);
             for (long step = 0; step < Math.abs((long) by); step++) {
+                if((step&1023)==0)checkBudget.run();
                 cursor = by < 0 ? cursor.getPrevious() : cursor.getNext();
                 if (cursor == null) throw new IllegalArgumentException("Shift exceeds instruction bounds");
                 if (cursor.getOpcode() < 0) throw new IllegalArgumentException("Shift crosses a bytecode label; raw InsnList position is not verified");

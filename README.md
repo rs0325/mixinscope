@@ -76,9 +76,11 @@ build/install/mixinscope/bin/mixinscope scan ./mods \
   --baseline previous-report.json --format json --output current-report.json
 ```
 
-抑制は理由必須です。finding を削除せず、`suppressed` と理由を記録します。期限当日まで有効で、既定の評価日は UTC の現在日です。baseline は new / unchanged / resolved を返し、解析失敗・未解決・不明な条件・環境差などで消えた finding は `unverifiedDisappearance` とします。`resolved` も静的な finding の消失であり、互換性の保証ではありません。
+抑制は理由必須です。`suppressions` は配列とし、未知のフィールド名や空の selector はエラーにします。ファイル全体の検証が成功してから適用するため、誤記した条件で抑制を広げたり、一部だけ適用したりしません。finding を削除せず、`suppressed` と理由を記録します。期限当日まで有効で、既定の評価日は UTC の現在日です。baseline は new / unchanged / resolved を返し、解析失敗・未解決・不明な条件・環境差などで消えた finding は `unverifiedDisappearance` とします。`resolved` も静的な finding の消失であり、互換性の保証ではありません。
 
-現在の report schema は 1.1、ruleset は 3 です。1.0 の baseline も読み取れますが、schema / ruleset をまたぐ消失は `unverifiedDisappearance` に分類します。
+baseline の header、比較に使う配列・coverage・finding ID を確認し、不完全な JSON に現在版の既定値を補って比較することはしません。history ファイルは最大 32 MiB です。
+
+現在の report schema は 1.1、ruleset は 4 です。1.0 の baseline も読み取れますが、schema / ruleset をまたぐ消失は `unverifiedDisappearance` に分類します。
 
 ## 初期の判定規則
 
@@ -94,6 +96,8 @@ build/install/mixinscope/bin/mixinscope scan ./mods \
 | MS008 | MixinExtras と Redirect の同じ操作候補 | MEDIUM |
 
 Risk と confidence は独立です。confidence は規則の条件をどれだけ確認できたかを示し、実行時競合の確定度ではありません。MS003 の JAR-only 比較は候補一致なので MEDIUM confidence、参照 bytecode で同じ命令を確認すると HIGH confidence になります。曖昧な selector、plugin、nested candidate、namespace 不明などは LOW confidence です。
+
+未対応の custom point、args、不正な descriptor、未対応の Constant 条件、重複 slice ID は JAR-only でも診断します。文字列が一致しても MS003 / MS006 / MS008 の同一注入候補とは扱いません。共有メソッドの MS001 は残ります。
 
 MS006 は命令の重複だけで暗黙の引数・local variable・handler 型の同一性を証明しません。引数 index が明示されていない場合などは、命令が一致しても MEDIUM confidence に留めます。
 
@@ -123,9 +127,9 @@ NeoForge の `requiredMods` / `behaviorVersion` は旧版に無条件適用し�
 - `1`：明示した `--fail-on` の閾値以上の、抑制されていない finding がある。
 - `2`：入力・解析・出力エラー、部分失敗。`--strict` は diagnostic がある場合も 2 にします。2 は 1 に優先します。
 
-入力 Mod の class loading・初期化・plugin 実行はありません。ZIP entry の CRC、重複、unsafe path、symlink、展開量等をチェックします。既定の上限は archive 128 MiB、entry 16 MiB、総展開量 256 MiB、深さ 4、entry 50,000、圧縮比 200、selector ごとの候補 1,000、owner / selector の組合せ 100,000、candidate pairs 100,000、協調的な時間制限 120 秒です。`scan --help` のオプションで調整できます。候補・target・pair 上限による省略は報告します。参照継承の探索は 256 levels / 4,096 visits、完全性の確認は 256 nodes までで、打ち切りは未検証として報告します。wildcard は regex を使わず、照合中にも時間予算を確認します。descriptor は反復で読み、JVM の array / 引数 slot 上限を確認します。時間制限は Java 内の処理単位で確認するもので、OS の sandbox や強制 CPU 制限ではありません。
+入力 Mod の class loading・初期化・plugin 実行はありません。ZIP entry の CRC、重複、unsafe path、symlink、展開量等をチェックします。既定の上限は archive 128 MiB、entry 16 MiB、総展開量 256 MiB、深さ 4、entry 50,000、directory ごとの JAR 候補 50,000（`--max-entries` と共通）、圧縮比 200、selector ごとの候補 1,000、owner / selector の組合せ 100,000、candidate pairs 100,000、協調的な時間制限 120 秒です。`scan --help` のオプションで調整できます。候補・target・pair 上限による省略は報告します。参照継承の探索は 256 levels / 4,096 visits、完全性の確認は 256 nodes までで、打ち切りは未検証として報告します。wildcard は regex を使わず、directory 列挙、metadata 登録、mapping records、命令・slice・shift の走査中にも時間予算を確認します。directory 候補の保持数も制限し、省略時は partial / 終了コード 2 です。descriptor は反復で読み、JVM の array / 引数 slot 上限を確認します。時間制限は Java 内の処理単位で確認するもので、OS の sandbox や強制 CPU 制限ではありません。
 
-JSON payload の UTF-8 展開量は既定 64 MiB（`--max-report-mib`）までです。HTML は escape 後の payload、text も全 inventory の JSON payload を検査します。超過時は出力を黙って削らず、終了コード 2 を返し、既存の出力ファイルを保持します。evidence の長い文字列は明示的な preview とし、元の annotation は inventory に残します。
+JSON payload の UTF-8 展開量は既定 64 MiB（`--max-report-mib`）までです。HTML は escape 後の payload、text も全 inventory の JSON payload を検査します。超過時や stdout 書込み失敗は明示エラーと終了コード 2 を返し、既存の出力ファイルを保持します。evidence の長い文字列は明示的な preview とし、元の annotation は inventory に残します。
 
 ## 自作の例と検証
 

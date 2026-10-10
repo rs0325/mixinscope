@@ -110,7 +110,7 @@ public final class RiskRules {
     }
     private void finding(String rule, Severity severity, Change a, Change b, Set<String> sides, String reason) {
         Finding f = new Finding(); f.rule = rule; f.severity = severity; f.reason = reason; f.target = a.indexedKey;
-        if (rule.equals("MS001")) f.ruleVersion = "2";
+        if (Set.of("MS001","MS003","MS006","MS008").contains(rule)) f.ruleVersion = "2";
         f.category = a.modification.artifact.equals(b.modification.artifact) ? "WITHIN_ARTIFACT" :
                 !Collections.disjoint(modIds(a.modification), modIds(b.modification)) ? "ALTERNATIVE_MOD_CANDIDATES" : "BETWEEN_MODS";
         f.modifications = List.of(a.modification.id, b.modification.id).stream().sorted().toList();

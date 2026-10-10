@@ -28,11 +28,21 @@ public final class ArchiveReader {
     public List<Artifact> roots(List<Path> inputs) {
         List<Artifact> result = new ArrayList<>();
         for (Path input : inputs.stream().sorted().toList()) {
+            options.checkBudget();
             try {
                 if (Files.isSymbolicLink(input)) throw new IOException("Symbolic link input rejected");
                 if (Files.isDirectory(input, LinkOption.NOFOLLOW_LINKS)) {
                     try (var stream = Files.list(input)) {
-                        for (Path path : stream.filter(p -> p.toString().endsWith(".jar")).sorted().toList()) {
+                        // Keep a stable bounded selection without materialising an unbounded directory.
+                        PriorityQueue<Path> candidates=new PriorityQueue<>(Comparator.reverseOrder());long found=0;
+                        for(var iterator=stream.iterator();iterator.hasNext();) {
+                            options.checkBudget();Path path=iterator.next();if(!path.toString().endsWith(".jar"))continue;found++;
+                            if(candidates.size()<options.maxEntries)candidates.add(path);
+                            else if(path.compareTo(candidates.peek())<0){candidates.remove();candidates.add(path);}
+                        }
+                        if(found>options.maxEntries)report.diagnostic("DIRECTORY_INPUT_LIMIT",input.getFileName().toString(),(found-options.maxEntries)+" JAR candidates skipped after directory limit "+options.maxEntries,true);
+                        for (Path path : candidates.stream().sorted().toList()) {
+                            options.checkBudget();
                             Artifact a = file(path, path.getFileName().toString());
                             if (a != null) result.add(a);
                         }

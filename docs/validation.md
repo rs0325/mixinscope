@@ -87,3 +87,13 @@ JSON / HTML payload は UTF-8 byte budget を書込み前に確認する。HTML-
 固定 Mixin 0.8.7 の [TargetSelectors.findRootTargets](https://github.com/SpongePowered/Mixin/blob/4053421aa10aaac6127d969028a29c94fe3054f6/src/main/java/org/spongepowered/asm/mixin/injection/selectors/TargetSelectors.java) は target ClassNode の methods を走査する。[MixinApplicatorStandard.findTargetMethod](https://github.com/SpongePowered/Mixin/blob/4053421aa10aaac6127d969028a29c94fe3054f6/src/main/java/org/spongepowered/asm/mixin/transformer/MixinApplicatorStandard.java) の Overwrite 検索も対象クラス内であり、[MemberInfo.attach](https://github.com/SpongePowered/Mixin/blob/4053421aa10aaac6127d969028a29c94fe3054f6/src/main/java/org/spongepowered/asm/mixin/injection/struct/MemberInfo.java) は異なる owner を拒否する。
 
 ruleset 3 では own declarations のみから candidateKeys と命令を検証する。hierarchy は継承だけの宣言を diagnostic / declaringOwner に残す参考情報とし、target key を親へ移さない。別 transformer が target method を事前に merge する可能性は未検証なので、継承だけのケースは UNRESOLVED / UNVERIFIED のままにする。ruleset 2 の finding 消失を解消と呼ばない回帰テストも含む。
+
+## 最終レビューの回帰
+
+[review.md](review.md) に対象範囲・修正結果・残るリリース条件を記録する。ruleset 4 / MS003・MS006・MS008 ruleVersion 2 は、未対応注入点を強い候補一致から除く。JAR-only と reference ありの双方で custom point / args / 不正 descriptor / ordinal / shift / Constant 条件、重複 slice を検証する。
+
+命令走査と Tiny records、directory 列挙、metadata 登録にも協調的な budget を確認する。directory は --max-entries と同じ候補数を上限に、辞書順の先頭を保持し、省略を partial にする。OS の CPU / heap 強制制限ではない。
+
+suppression 全体の検証前に finding を変更しない。未知 field の誤記による広い抑制、欠損 header / coverage / 重複 finding ID の baseline、stdout 書込み失敗を回帰テストで確認する。baseline 検証は比較に使用する構造の検査で、レポートの署名や出所の真正性を確認するものではない。
+
+最終ローカル検証：160 Java tests / failures=0、14 authored runtime cases、8 JSON Schema reports、HTML DOM、installDist / distZip / distTarが成功。ruleset 4 の固定6ケースはすべてexit 0 / partial=false。Fabricのfindingは270→269、Lithium更新差分はnew=3 / unchanged=266 / unverifiedDisappearance=3。未対応注入点を候補一致から外した差であり、runtime競合の解消とは扱わない。

@@ -20,6 +20,7 @@ public final class Discovery {
     }
     public void discover(List<Artifact> roots) { for (Artifact a : roots) visit(a, 0); checkDuplicates(); checkRequiredMods(); }
     private void visit(Artifact a, int depth) {
+        options.checkBudget();
         if (!visited.add(a.hash)) return;
         List<String> nested = new ArrayList<>();
         List<Registration> registrations = new ArrayList<>();
@@ -107,6 +108,7 @@ public final class Discovery {
             Set<String> finalSide = side;
             Set<String> registered = new HashSet<>();
             for (Registration reg : registrations) {
+                options.checkBudget();
                 // Do not collapse distinct registrations of the same config for different sides.
                 String key = reg.path + reg.sides + reg.required + reg.behavior;
                 if (registered.add(key)) config(a, reg, finalSide);
@@ -117,6 +119,7 @@ public final class Discovery {
             }
         } catch (IOException | RuntimeException e) { a.partial = true; report.diagnostic("METADATA_ERROR", a.hash, String.valueOf(e.getMessage()), true); }
         for (String path : new TreeSet<>(nested)) {
+            options.checkBudget();
             Artifact child = archives.nested(a, path, depth + 1);
             if (child != null) { report.diagnostic("NESTED_SELECTION_UNKNOWN", child.hash, "Nested candidate selection is not emulated", false); visit(child, depth + 1); }
         }
@@ -126,6 +129,7 @@ public final class Discovery {
     }
     private void register(Artifact a, List<Registration> result, Object values, Set<String> sides, List<String> required) {
         for (Object value : Util.list(values)) {
+            options.checkBudget();
             if (value instanceof String s) result.add(new Registration(s, sides, required));
             else {
                 Map<String, Object> m = Util.map(value);

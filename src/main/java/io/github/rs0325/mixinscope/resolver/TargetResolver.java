@@ -19,7 +19,7 @@ public final class TargetResolver {
             try {
                 if (options.namespace.equals("unknown") || options.outputNamespace == null) throw new IOException("Mappings require explicit --input-namespace and --output-namespace");
                 if (options.mappingGameVersion != null && !options.mappingGameVersion.equals(options.gameVersion)) throw new IOException("Mapping game version differs from scan game version");
-                mappings = new TinyMappings(options.mappings, options.namespace, options.outputNamespace, options.maxEntry);
+                mappings = new TinyMappings(options.mappings, options.namespace, options.outputNamespace, options.maxEntry,options::checkBudget);
                 namespace = options.outputNamespace;
                 report.environment.put("mapping", Map.of("hash", mappings.hash, "from", mappings.from, "to", mappings.to,
                         "gameVersion", options.mappingGameVersion == null ? "unverified" : options.mappingGameVersion));
@@ -80,7 +80,7 @@ public final class TargetResolver {
                             target.resolution = Resolution.RESOLVED; target.existence = Existence.VERIFIED; target.bytecodeHash = match.hash();
                             target.declaringOwner = match.owner();
                             target.limitation = "Reference bytecode precedes other transformers; runtime application is unverified.";
-                            InstructionMatcher.resolve(match.method(), m, target, mappings, rawReference -> reference(config, m, rawReference), report);
+                            InstructionMatcher.resolve(match.method(), m, target, mappings, rawReference -> reference(config, m, rawReference), report,options::checkBudget);
                         } else if (!matches.isEmpty()) {
                             target.resolution = Resolution.AMBIGUOUS;
                         }

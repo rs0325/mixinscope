@@ -62,4 +62,17 @@ public final class Util {
         if (n == null || !n.isObject()) throw new java.io.IOException("Expected a JSON object");
         return JSON.convertValue(n, new com.fasterxml.jackson.core.type.TypeReference<>() {});
     }
+    public static byte[] readBytes(java.nio.file.Path path,long maximum,Runnable checkBudget)throws IOException {
+        if(!java.nio.file.Files.isRegularFile(path))throw new IOException("Expected a regular file");
+        if(java.nio.file.Files.size(path)>maximum)throw new IOException("File size limit exceeded");
+        try(InputStream input=java.nio.file.Files.newInputStream(path);ByteArrayOutputStream output=new ByteArrayOutputStream()) {
+            byte[] buffer=new byte[8192];
+            for(int count;(count=input.read(buffer))!=-1;) {
+                checkBudget.run();
+                if(count>maximum-output.size())throw new IOException("File size limit exceeded");
+                output.write(buffer,0,count);
+            }
+            return output.toByteArray();
+        }
+    }
 }

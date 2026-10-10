@@ -12,15 +12,25 @@ public final class ReportHistory {
     private ReportHistory() {}
     public static void suppress(Report report, Path file, LocalDate today) throws IOException {
         Map<String, Object> document = read(file);
+        if(document.size()!=1||!(document.get("suppressions") instanceof List<?>))throw new IOException("Expected a suppressions array and no unknown top-level fields");
+        List<Map<String,Object>> validated=new ArrayList<>();List<LocalDate> expiries=new ArrayList<>();
         for (Object value : Util.list(document.get("suppressions"))) {
             Map<String, Object> rule = Util.map(value); String reason = Util.str(rule.get("reason"), "");
+            if(!Set.of("rule","target","mod","reason","expires").containsAll(rule.keySet()))throw new IOException("Unknown suppression field");
             if (reason.isBlank()) throw new IOException("Suppression reason is required");
             if (!rule.containsKey("rule") && !rule.containsKey("target") && !rule.containsKey("mod")) throw new IOException("Suppression requires rule, target, or mod");
+            for(String selector:List.of("rule","target","mod"))if(rule.containsKey(selector)&&(!(rule.get(selector) instanceof String text)||text.isBlank()))throw new IOException("Suppression selector must be a nonblank string: "+selector);
+            LocalDate expires=null;
             if (rule.containsKey("expires")) {
-                LocalDate expires;
-                try { expires = LocalDate.parse(rule.get("expires").toString()); } catch (DateTimeException ex) { throw new IOException("Invalid suppression expiry", ex); }
-                if (expires.isBefore(today)) { report.diagnostic("SUPPRESSION_EXPIRED", file.getFileName().toString(), "Expired suppression: " + reason, false); continue; }
+                if(!(rule.get("expires") instanceof String text))throw new IOException("Invalid suppression expiry");
+                try { expires = LocalDate.parse(text); } catch (DateTimeException ex) { throw new IOException("Invalid suppression expiry", ex); }
             }
+            validated.add(rule);expiries.add(expires);
+        }
+        // Validate the entire document before applying anything; a typo must not broaden suppression.
+        for(int i=0;i<validated.size();i++) {
+            Map<String,Object> rule=validated.get(i);String reason=(String)rule.get("reason");LocalDate expires=expiries.get(i);
+            if(expires!=null&&expires.isBefore(today)){report.diagnostic("SUPPRESSION_EXPIRED",file.getFileName().toString(),"Expired suppression: "+reason,false);continue;}
             for (Finding finding : report.findings) if (
                     (!rule.containsKey("rule") || finding.rule.equals(rule.get("rule"))) &&
                     (!rule.containsKey("target") || finding.target.display().equals(rule.get("target"))) &&
@@ -32,7 +42,8 @@ public final class ReportHistory {
         FindingGroups.refresh(report);
     }
     public static void baseline(Report report, Path file) throws IOException {
-        Report previous = Util.JSON.treeToValue(Util.JSON.readTree(readBytes(file)), Report.class);
+        var node=Util.JSON.readTree(readBytes(file));validateBaseline(node);
+        Report previous = Util.JSON.treeToValue(node, Report.class);
         if (!Set.of("1.0", "1.1").contains(previous.schemaVersion)) throw new IOException("Unsupported baseline schema version");
         Map<String, Finding> before = new TreeMap<>(), now = new TreeMap<>();
         for (Finding f : previous.findings) before.put(f.id, f);
@@ -61,7 +72,24 @@ public final class ReportHistory {
     }
     private static Map<String, Object> read(Path file) throws IOException { return Util.json(readBytes(file)); }
     private static byte[] readBytes(Path file) throws IOException {
-        if (Files.size(file) > 32L << 20) throw new IOException("History file size limit exceeded");
-        return Files.readAllBytes(file);
+        return Util.readBytes(file,32L<<20,()->{});
+    }
+    private static void validateBaseline(com.fasterxml.jackson.databind.JsonNode node)throws IOException {
+        if(node==null||!node.isObject())throw new IOException("Expected a baseline report object");
+        for(String name:List.of("schemaVersion","rulesetVersion"))if(!node.path(name).isTextual()||node.path(name).asText().isBlank())throw new IOException("Missing baseline header: "+name);
+        for(String name:List.of("environment","coverage"))if(!node.path(name).isObject())throw new IOException("Missing baseline object: "+name);
+        for(String name:List.of("artifacts","findings","transformers","modifications"))if(!node.path(name).isArray())throw new IOException("Missing baseline array: "+name);
+        var coverage=node.path("coverage");
+        if(!coverage.path("partial").isBoolean()||!coverage.path("diagnostics").isArray())throw new IOException("Invalid baseline coverage");
+        for(String name:List.of("unresolvedTargets","ambiguousTargets","unknownApplicability","skippedPairs"))
+            if(!coverage.path(name).isIntegralNumber()||!coverage.path(name).canConvertToInt()||coverage.path(name).asInt()<0)throw new IOException("Invalid baseline coverage counter: "+name);
+        if(coverage.has("skippedTargets")&&(!coverage.path("skippedTargets").isIntegralNumber()||!coverage.path("skippedTargets").canConvertToInt()||coverage.path("skippedTargets").asInt()<0))throw new IOException("Invalid baseline skippedTargets");
+        for(var artifact:node.path("artifacts"))if(!artifact.path("hash").isTextual()||artifact.path("hash").asText().isBlank())throw new IOException("Invalid baseline artifact hash");
+        Set<String> ids=new HashSet<>();
+        for(var finding:node.path("findings")) {
+            if(!finding.path("id").isTextual()||finding.path("id").asText().isBlank()||!ids.add(finding.path("id").asText()))throw new IOException("Missing or duplicate baseline finding ID");
+            if(!finding.path("target").isObject())throw new IOException("Missing baseline finding target");
+            for(String name:List.of("owner","name","descriptor","namespace","gameVersion","loaderProfile"))if(!finding.path("target").path(name).isTextual())throw new IOException("Invalid baseline target: "+name);
+        }
     }
 }

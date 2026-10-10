@@ -103,7 +103,10 @@ public final class Main implements Runnable {
                     finally { Files.deleteIfExists(temporary); }
                 } catch (IOException ex) { spec.commandLine().getErr().println("ERROR OUTPUT_ERROR: " + ex.getMessage()); return 2; }
             }
-            spec.commandLine().getOut().flush();
+            if(output==null) {
+                spec.commandLine().getOut().flush();
+                if(spec.commandLine().getOut().checkError()){spec.commandLine().getErr().println("ERROR OUTPUT_ERROR: Cannot write standard output");return 2;}
+            }
             if (report.coverage.partial || strict && !report.coverage.diagnostics.isEmpty()) return 2;
             return failOn != null && report.findings.stream().anyMatch(f -> !f.suppressed && f.severity.compareTo(failOn) >= 0) ? 1 : 0;
         }

@@ -11,14 +11,16 @@ final class InjectionCandidates {
     static void normalize(Modification m,TinyMappings mappings,String input,String output,UnaryOperator<String> references,Report report) {
         try {
             for(var at:m.at)m.normalizedAt.add(point(at,m,mappings,input,output,references));
+            Set<String> sliceIds=new HashSet<>();
             for(Object raw:Util.list(m.options.get("slice"))) {
                 Map<String,Object> slice=new TreeMap<>(Util.map(raw));
+                if(!sliceIds.add(Util.str(slice.get("id"),"")))throw new PointValidation.Unsupported("Duplicate slice id");
                 for(String end:List.of("from","to"))if(slice.containsKey(end))slice.put(end,point(Util.map(slice.get(end)),m,mappings,input,output,references));
                 m.normalizedSlices.add(slice);
             }
             m.pointCandidatesNormalized=true;
         } catch(IllegalArgumentException error) {
-            report.diagnostic("POINT_CANDIDATE_NORMALIZATION_UNVERIFIED",m.id,error.getMessage(),false);
+            report.diagnostic(error instanceof PointValidation.Unsupported?"INJECTION_POINT_UNSUPPORTED":"POINT_CANDIDATE_NORMALIZATION_UNVERIFIED",m.id,error.getMessage(),false);
         }
     }
     private static Map<String,Object> point(Map<String,Object> raw,Modification m,TinyMappings mappings,String input,String output,UnaryOperator<String> references) {
@@ -58,6 +60,7 @@ final class InjectionCandidates {
             }
             at.put("constant",constants);
         }
+        PointValidation.validate(at);
         return at;
     }
 }

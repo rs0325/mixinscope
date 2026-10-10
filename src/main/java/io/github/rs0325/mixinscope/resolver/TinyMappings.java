@@ -11,9 +11,11 @@ public final class TinyMappings {
     private final Map<String, String> classes = new HashMap<>(), methods = new HashMap<>(), fields = new HashMap<>();
     public final String hash, from, to;
     public TinyMappings(Path file, String from, String to, long limit) throws IOException {
+        this(file,from,to,limit,()->{});
+    }
+    public TinyMappings(Path file, String from, String to, long limit,Runnable checkBudget) throws IOException {
         this.from = from; this.to = to;
-        if (Files.size(file) > limit) throw new IOException("Mapping file size limit exceeded");
-        byte[] bytes = Files.readAllBytes(file); hash = Util.hash(bytes);
+        byte[] bytes = Util.readBytes(file,limit,checkBudget); hash = Util.hash(bytes);
         List<String> lines = Arrays.asList(new String(bytes, java.nio.charset.StandardCharsets.UTF_8).split("\n"));
         if (lines.isEmpty()) throw new IOException("Empty mappings");
         String[] header = lines.getFirst().stripTrailing().split("\t", -1);
@@ -25,6 +27,7 @@ public final class TinyMappings {
         List<String[]> rows = new ArrayList<>();
         boolean escaped = lines.stream().anyMatch(l -> l.stripTrailing().equals("\tescaped-names"));
         for (String raw : lines.subList(1, lines.size())) {
+            checkBudget.run();
             String[] row = raw.replace("\r", "").split("\t", -1);
             if (escaped) for (int i = 0; i < row.length; i++) row[i] = unescape(row[i]);
             rows.add(row);
@@ -36,6 +39,7 @@ public final class TinyMappings {
         }
         String owner = null;
         for (String[] row : rows) {
+            checkBudget.run();
             if (row.length > 0 && row[0].equals("c")) owner = name(row, 1 + source, row[1]);
             else if (row.length > 1 && row[0].isEmpty() && (row[1].equals("m") || row[1].equals("f"))) {
                 if (owner == null || row.length < 3 + namespaces.size()) throw new IOException("Truncated or unowned method mapping");

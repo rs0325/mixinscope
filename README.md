@@ -35,7 +35,7 @@ HTML はネットワーク通信・外部 CDN なしで閲覧できます。検�
 
 同じ対象への finding は `targetGroups` にまとめ、影響 Mod・最大 risk・未抑制の最大 risk・規則を表示します。個々の finding ID と evidence も保持します。グループは game / loader profile / namespace / owner / method / descriptor を含むキーで区別します。変更を持つ Mod は、finding がなくても inventory から辿れます。
 
-名前だけの selector や wildcard は、他 Mod の descriptor 付き宣言から候補を収集します。これは完全なメソッド一覧ではなく、一つの候補が見つかっても解決済みにはしません。候補による重複は MS001 / LOW risk / LOW confidence に限定します。宣言された owner と、参照 classpath で確認した declaring owner は別々に記録します。
+名前だけの selector や wildcard は、他 Mod の descriptor 付き宣言から候補を収集します。これは完全なメソッド一覧ではなく、一つの候補が見つかっても解決済みにはしません。候補による重複は MS001 / LOW risk / LOW confidence に限定します。宣言された owner と、参照 classpath で確認した declaring owner は別々に記録します。Mixin の root selector / Overwrite が変更するのは対象クラス自身の method body です。親クラスの継承メソッドだけが見つかっても、target key を親へ移さず `TARGET_INHERITED_NOT_LOCAL` として未解決にします。`declaringOwner` に親を記録する場合も、検証済みの注入対象という意味ではありません。子が独自に宣言したメソッドは、親の overload と混ぜません。selector に対象と異なる owner が明示されている場合も診断に残します。
 
 `--mod mod_id`、`--target attack`、`--min-severity high` は表示用のフィルタです。CI の判定には `--fail-on high` を使います。表示フィルタで危険な finding を隠しても終了コードの判定は変わりません。
 
@@ -78,7 +78,7 @@ build/install/mixinscope/bin/mixinscope scan ./mods \
 
 抑制は理由必須です。finding を削除せず、`suppressed` と理由を記録します。期限当日まで有効で、既定の評価日は UTC の現在日です。baseline は new / unchanged / resolved を返し、解析失敗・未解決・不明な条件・環境差などで消えた finding は `unverifiedDisappearance` とします。`resolved` も静的な finding の消失であり、互換性の保証ではありません。
 
-現在の report schema は 1.1、ruleset は 2 です。1.0 の baseline も読み取れますが、schema をまたぐ消失は `unverifiedDisappearance` に分類します。
+現在の report schema は 1.1、ruleset は 3 です。1.0 の baseline も読み取れますが、schema / ruleset をまたぐ消失は `unverifiedDisappearance` に分類します。
 
 ## 初期の判定規則
 

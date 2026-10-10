@@ -40,6 +40,11 @@ MixinExtras profile は [0.3.2](https://github.com/LlamaLad7/MixinExtras/tree/f7
 | 同じ操作への require=1 Redirect 2 個 | 実際の InjectionError を期待して検証 | MS003 / HIGH、参照命令一致の confidence HIGH |
 | index=0 ModifyArg 2 個 | 順序によって 14 または 16、元処理 1 回 | MS006 / MEDIUM；明示 index と命令の一致 |
 | constructor / static initializer の field merge | 元の seed=3、Mixin の instance seed=7 / static seed=5 | MIXIN_INITIALIZER_UNANALYZED；架空の injector finding を生成しない |
+| 親の compute を継承する子への require=0 Inject | 結果6、callback0回 | 親の宣言は参考情報、子の target は未解決 |
+| 子が compute を override、親には overload も存在 | 子の結果9、callback1回 | 対象候補は子の宣言だけ。親 overload と集約しない |
+| 継承だけの子への require=1 Inject | InvalidInjectionException：target不足 | TARGET_INHERITED_NOT_LOCAL、親の命令を検証済みにしない |
+| 継承だけの子への Overwrite | InvalidMixinException：target不足 | 親のmethod bodyへのOverwriteとして集約しない |
+| 対象と異なる owner を method selector に指定 | InvalidInjectionException：owner非対応 | SELECTOR_UNSUPPORTED、他クラスへの変更を生成しない |
 
 `build/runtime-fixture/results.json` に観測結果を保存する。順序を保証するテストではなく、許容する順序における対照である。`CompiledFixtureTest` は同じ javac 出力を JAR にして、ロードせずに annotation / handler descriptor / direct-call syntax / 元 bytecode を解析する。runtime 対照の範囲は 0.4.1 と自作クラスであり、他の版・Minecraft の loader 環境へ一般化しない。
 
@@ -49,7 +54,7 @@ MixinExtras profile は [0.3.2](https://github.com/LlamaLad7/MixinExtras/tree/f7
 
 2026-10-10 に実行した固定 corpus の summary は [real-mods-results.json](real-mods-results.json) に保存する。Fabric の Lithium / Sodium / ModernFix、Forge の ModernFix、NeoForge の FerriteCore、Quilt の QSL を含む。Lithium は 0.13.0 → 0.13.1 の baseline 差分も確認する。Quilt QSL は root 1 JAR と登録 nested 87 JAR を読み取る。全ケースが exit 0 / partial=false でも、plugin・nested 選択・未対応 selector 等の diagnostic は残る。これは静的読み取りの検証であり、互換性の確認ではない。
 
-FerriteCore Fabric `W4lg2p7U` の primary file は配布元でも `-dev.jar` で、named と intermediary の宣言が混在する。単独の `namespace=unknown` ケースに分け、他の Fabric pack の target identity と混ぜない。NeoForge FerriteCore の `${refmap_target}refmap.json` は実ファイルがないため REFMAP_MISSING を保持する。Forge / Quilt の実 Mixin・MixinExtras runtime 版は unknown のままにし、bundled 候補を選択済みと表示しない。
+FerriteCore Fabric `W4lg2p7U` の primary file は配布元でも `-dev.jar` で、named と intermediary の宣言が混在する。単独の `namespace=unknown` ケースに分け、他の Fabric pack の target identity と混ぜない。ruleset 3 では、宣言 owner と default refmap の qualified owner が異なる注入先も未対応として保持する。この dev corpus の finding は5から4へ減ったが、namespace / runtime context を確認していないため互換性の改善や実際の競合解消とは判定しない。NeoForge FerriteCore の `${refmap_target}refmap.json` は実ファイルがないため REFMAP_MISSING を保持する。Forge / Quilt の実 Mixin・MixinExtras runtime 版は unknown のままにし、bundled 候補を選択済みと表示しない。
 
 この検証ではゲーム JAR・mappings を取得せず、Minecraft の起動も行っていない。実際のクラッシュに関する false positives / false negatives の評価は、自作 runtime 対照と分けて未完了として扱う。
 
@@ -76,3 +81,9 @@ FerriteCore Fabric `W4lg2p7U` の primary file は配布元でも `-dev.jar` で
 大量の wildcard と長い descriptor は regex の backtracking / stack に依存せず処理する。owner / selector の組合せを max-targets で制限し、skippedTargets と raw declarations を保持する。深い / cyclic hierarchy、異なる interface 宣言、class path と internal name の不一致、欠けた platform Object を回帰テストで検証する。
 
 JSON / HTML payload は UTF-8 byte budget を書込み前に確認する。HTML-safe escape による膨張も上限に含める。text は全 JSON payload を事前検証する。超過を終了コード 2 とし、既存 destination の保持を3形式で確認する。巨大な evidence は preview へ制限し、元 annotation を inventory に残す。これらは OS の CPU / heap sandbox ではなく、全入力に対するピークメモリの保証はしない。
+
+## 対象クラスと継承の区別
+
+固定 Mixin 0.8.7 の [TargetSelectors.findRootTargets](https://github.com/SpongePowered/Mixin/blob/4053421aa10aaac6127d969028a29c94fe3054f6/src/main/java/org/spongepowered/asm/mixin/injection/selectors/TargetSelectors.java) は target ClassNode の methods を走査する。[MixinApplicatorStandard.findTargetMethod](https://github.com/SpongePowered/Mixin/blob/4053421aa10aaac6127d969028a29c94fe3054f6/src/main/java/org/spongepowered/asm/mixin/transformer/MixinApplicatorStandard.java) の Overwrite 検索も対象クラス内であり、[MemberInfo.attach](https://github.com/SpongePowered/Mixin/blob/4053421aa10aaac6127d969028a29c94fe3054f6/src/main/java/org/spongepowered/asm/mixin/injection/struct/MemberInfo.java) は異なる owner を拒否する。
+
+ruleset 3 では own declarations のみから candidateKeys と命令を検証する。hierarchy は継承だけの宣言を diagnostic / declaringOwner に残す参考情報とし、target key を親へ移さない。別 transformer が target method を事前に merge する可能性は未検証なので、継承だけのケースは UNRESOLVED / UNVERIFIED のままにする。ruleset 2 の finding 消失を解消と呼ばない回帰テストも含む。

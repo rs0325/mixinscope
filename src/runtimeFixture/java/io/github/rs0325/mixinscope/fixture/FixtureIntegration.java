@@ -66,6 +66,27 @@ public final class FixtureIntegration {
         int instanceSeed=(Integer)initialized.getMethod("fixtureInstanceSeed").invoke(instance),staticSeed=(Integer)initialized.getMethod("fixtureStaticSeed").invoke(instance);
         if(instanceSeed!=7||staticSeed!=5||initialized.getField("seed").getInt(instance)!=3)throw new AssertionError("Initializer merge control failed");
         cases.put("InitializerCalculator",Map.of("targetSeed",3,"mixinInstanceSeed",instanceSeed,"mixinStaticSeed",staticSeed));
+        for(String name:List.of("OptionalInheritedChild","OwnedOverrideChild")) {
+            Class<?> child=loader.loadClass("io.github.rs0325.mixinscope.fixture.target."+name);
+            int value=(Integer)child.getMethod("compute",int.class).invoke(child.getConstructor().newInstance(),3);
+            int observations=child.getField("observations").getInt(null);
+            boolean local=name.equals("OwnedOverrideChild");
+            if(value!=(local?9:6)||observations!=(local?1:0))throw new AssertionError("Local / inherited method selection mismatch: "+name);
+            cases.put(name,Map.of("result",value,"callbacks",observations));
+        }
+        for(String name:List.of("RequiredInheritedChild","OverwriteInheritedChild","ExplicitOwnerCalculator")) {
+            String type=name.equals("OverwriteInheritedChild")?"org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException":"org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException";
+            String message=name.equals("OverwriteInheritedChild")?"was not located":name.equals("ExplicitOwnerCalculator")?"not supported":"could not find any targets";
+            try {
+                loader.loadClass("io.github.rs0325.mixinscope.fixture.target."+name);
+                throw new AssertionError("Unsupported target selection unexpectedly applied: "+name);
+            } catch(Throwable error) {
+                Throwable cause=error;
+                while(cause!=null&&!cause.getClass().getName().equals(type))cause=cause.getCause();
+                if(cause==null||!String.valueOf(cause.getMessage()).contains(message))throw error;
+                cases.put(name,Map.of("expectedFailure",type,"message",String.valueOf(cause.getMessage())));
+            }
+        }
         try {
             loader.loadClass("io.github.rs0325.mixinscope.fixture.target.RedirectCalculator");
             throw new AssertionError("Two required redirects to one operation unexpectedly applied");

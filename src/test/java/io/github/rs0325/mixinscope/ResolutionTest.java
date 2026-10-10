@@ -59,10 +59,11 @@ class ResolutionTest {
         ScanOptions o=options(mod(directory,"a",new Method("Inject","absent()V"))); o.gameJar=game(directory);
         Report report=scan(o); assertTrue(diagnostic(report,"TARGET_MISSING")); assertEquals(Existence.MISSING,report.modifications.getFirst().targets.getFirst().existence);
     }
-    @Test void inheritedDeclaringOwnerIsResolved() throws Exception {
+    @Test void inheritedDeclaringOwnerIsInformationalOnly() throws Exception {
         Path jar=jar(directory.resolve("reference.jar"),Map.of("game/Child.class",emptyClass("game/Child","game/Player"),"game/Player.class",gameClass("game/Player","java/lang/Object")));
         ScanOptions o=options(mod(directory,"a","game/Child","*",new Method("Inject","attack()V"))); o.gameJar=jar;
-        assertEquals("game/Player",scan(o).modifications.getFirst().targets.getFirst().key.owner());
+        Report r=scan(o);Target t=r.modifications.getFirst().targets.getFirst();
+        assertEquals("game/Child",t.key.owner());assertEquals("game/Player",t.declaringOwner);assertEquals(Resolution.UNRESOLVED,t.resolution);assertFalse(t.instructionsVerified);assertTrue(t.candidateKeys.isEmpty());assertTrue(diagnostic(r,"TARGET_INHERITED_NOT_LOCAL"));
     }
     @Test void incompleteSuperclassDoesNotProveMethodAbsence() throws Exception {
         ScanOptions o=options(mod(directory,"a",new Method("Inject","absent()V"))); o.gameJar=jar(directory.resolve("ref.jar"),Map.of("game/Player.class",gameClass("game/Player","game/AbsentParent")));

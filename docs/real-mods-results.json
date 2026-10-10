@@ -1,9 +1,9 @@
 {
   "scope": "Static JAR reading only; no Minecraft, downloaded Mods or their plugins executed",
-  "generatedAtUTC": "2026-10-10T03:53:36Z",
+  "generatedAtUTC": "2026-10-10T08:11:57Z",
   "manifestSha256": "0e03f09f2fd4c8500a8aa253c3d35f2c10d02e15007eeb6659d9c4e8a42db1b7",
   "schemaVersion": "1.1",
-  "rulesetVersion": "2",
+  "rulesetVersion": "3",
   "toolVersion": "0.1.0-SNAPSHOT",
   "environment": {
     "os": "macOS-15.7.7-arm64-arm-64bit",
@@ -13,7 +13,7 @@
   "packs": [
     {
       "pack": "fabric-baseline-1.21.1",
-      "seconds": 1.321,
+      "seconds": 0.61,
       "exit": 0,
       "artifacts": 9,
       "configs": 14,
@@ -49,7 +49,7 @@
     },
     {
       "pack": "fabric-1.21.1",
-      "seconds": 1.596,
+      "seconds": 0.714,
       "exit": 0,
       "artifacts": 9,
       "configs": 14,
@@ -96,13 +96,13 @@
     },
     {
       "pack": "fabric-ferrite-dev-1.21.1",
-      "seconds": 0.793,
+      "seconds": 0.355,
       "exit": 0,
       "artifacts": 1,
       "configs": 10,
       "modifications": 49,
-      "findings": 5,
-      "targetGroups": 5,
+      "findings": 4,
+      "targetGroups": 4,
       "partial": false,
       "kinds": {
         "Accessor": 30,
@@ -116,13 +116,13 @@
         "MIXIN_INITIALIZER_UNANALYZED": 1,
         "NAMESPACE_UNKNOWN": 1,
         "PLUGIN_NOT_EXECUTED": 8,
-        "SELECTOR_UNSUPPORTED": 1,
+        "SELECTOR_UNSUPPORTED": 12,
         "TARGET_AMBIGUOUS": 9
       }
     },
     {
       "pack": "forge-1.20.1",
-      "seconds": 1.076,
+      "seconds": 0.492,
       "exit": 0,
       "artifacts": 3,
       "configs": 3,
@@ -157,7 +157,7 @@
     },
     {
       "pack": "neoforge-1.21.1",
-      "seconds": 0.957,
+      "seconds": 0.398,
       "exit": 0,
       "artifacts": 1,
       "configs": 9,
@@ -184,7 +184,7 @@
     },
     {
       "pack": "quilt-1.20.1",
-      "seconds": 1.604,
+      "seconds": 0.657,
       "exit": 0,
       "artifacts": 88,
       "configs": 89,

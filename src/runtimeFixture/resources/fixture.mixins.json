@@ -19,7 +19,12 @@
     "RedirectB",
     "ArgumentA",
     "ArgumentB",
-    "InitializerMixin"
+    "InitializerMixin",
+    "OptionalInherited",
+    "RequiredInherited",
+    "OwnedOverride",
+    "ExplicitOwner",
+    "InheritedOverwrite"
   ],
   "injectors": {
     "defaultRequire": 1

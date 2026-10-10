@@ -362,6 +362,7 @@
           "type": "boolean"
         },
         "declaringOwner": {
+          "description": "Observed declaration owner. For unresolved inherited-only targets this is informational, not the class being modified; read resolution, existence and limitation together.",
           "$ref": "#/$defs/nullableString"
         }
       },

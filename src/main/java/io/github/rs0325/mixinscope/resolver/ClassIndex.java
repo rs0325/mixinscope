@@ -40,6 +40,18 @@ public final class ClassIndex {
     }
     public boolean contains(String owner) { return classes.containsKey(owner) && !ambiguous.contains(owner); }
     public boolean ambiguous(String owner) { return ambiguous.contains(owner); }
+    /** Mixin's root selectors inspect the target ClassNode, not inherited method bodies. */
+    public List<Match> declaredMethods(String owner,String name,String descriptor) {
+        if(!contains(owner))return List.of();
+        List<Match> result=new ArrayList<>();
+        for(MethodNode method:classes.get(owner).methods) {
+            options.checkBudget();
+            if(Util.matchesGlob(name,method.name,options::checkBudget)&&(descriptor.isEmpty()||method.desc.equals(descriptor)))
+                result.add(new Match(owner,method,hashes.get(owner)));
+        }
+        return result;
+    }
+    /** Inheritance inventory only; these results are not Mixin root injection targets. */
     public List<Match> methods(String owner, String name, String descriptor) {
         hierarchyWork=0;lookupTruncated=false;
         List<Match> result=find(owner,name,descriptor,new HashSet<>());

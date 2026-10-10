@@ -25,8 +25,27 @@ class CompiledFixtureTest {
                 "fabric.mod.json",Util.JSON.writeValueAsBytes(Map.of("schemaVersion",1,"id",name.toLowerCase(Locale.ROOT),"version","1","mixins",List.of("fixture.mixins.json"))),
                 "fixture.mixins.json",Util.JSON.writeValueAsBytes(Map.of("package","io.github.rs0325.mixinscope.fixture.mixin","mixins",List.of(name))),
                 ROOT+"mixin/"+name+".class",compiled("mixin/"+name))));
-        var o=options(jars.toArray(Path[]::new));o.gameJar=jar(directory.resolve("reference.jar"),Map.of(ROOT+"target/"+target+".class",compiled("target/"+target)));
+        Map<String,byte[]> reference=new TreeMap<>();reference.put(ROOT+"target/"+target+".class",compiled("target/"+target));
+        if(target.endsWith("Child"))reference.put(ROOT+"target/ParentCalculator.class",compiled("target/ParentCalculator"));
+        var o=options(jars.toArray(Path[]::new));o.gameJar=jar(directory.resolve("reference.jar"),reference);
         return scan(o);
+    }
+    @Test void inheritedInjectAndOverwriteNeverVerifyParentInstructions() throws Exception {
+        for(String[] example:List.of(new String[]{"OptionalInheritedChild","OptionalInherited"},new String[]{"RequiredInheritedChild","RequiredInherited"},new String[]{"OverwriteInheritedChild","InheritedOverwrite"})) {
+            Report report=analyze(example[0],example[1]);Target target=report.modifications.getFirst().targets.getFirst();
+            assertEquals(ROOT+"target/"+example[0],target.key.owner());assertEquals(ROOT+"target/ParentCalculator",target.declaringOwner);
+            assertEquals(Resolution.UNRESOLVED,target.resolution);assertEquals(Existence.UNVERIFIED,target.existence);assertFalse(target.instructionsVerified);
+            assertTrue(target.candidateKeys.isEmpty());assertTrue(diagnostic(report,"TARGET_INHERITED_NOT_LOCAL"));
+        }
+    }
+    @Test void ownOverrideResolvesWithoutAddingParentOverloads() throws Exception {
+        Report report=analyze("OwnedOverrideChild","OwnedOverride");Target target=report.modifications.getFirst().targets.getFirst();
+        assertEquals(Resolution.RESOLVED,target.resolution);assertEquals(Existence.VERIFIED,target.existence);assertEquals("(I)I",target.key.descriptor());
+        assertEquals(ROOT+"target/OwnedOverrideChild",target.declaringOwner);assertTrue(target.instructionsVerified);assertEquals(1,target.candidateKeys.size());
+    }
+    @Test void qualifiedSelectorCannotRedirectMixinToAnotherClass() throws Exception {
+        Report report=analyze("ExplicitOwnerCalculator","ExplicitOwner");Target target=report.modifications.getFirst().targets.getFirst();
+        assertNull(target.key);assertFalse(target.instructionsVerified);assertTrue(diagnostic(report,"SELECTOR_UNSUPPORTED"));assertTrue(report.findings.isEmpty());
     }
     @Test void compiledOperationChainHasActualSignaturesAndInstructionEvidence() throws Exception {
         Report r=analyze("ChainCalculator","ChainA","ChainB");

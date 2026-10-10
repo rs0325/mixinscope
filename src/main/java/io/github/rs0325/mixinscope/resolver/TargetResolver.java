@@ -55,6 +55,7 @@ public final class TargetResolver {
                         fallbackOwner=Util.owner(reference(config,m,declared,true));break;
                     }
                     Selector s = parse(selector, fallbackOwner);
+                    if(!s.owner.equals(fallbackOwner))throw new IllegalArgumentException("Selector owner differs from the declared Mixin target in the current namespace; cross-namespace aliases remain unverified and a selector cannot redirect the Mixin to another class");
                     String resolvedOwner = s.owner, name = s.name, descriptor = s.descriptor;
                     if (mappings != null && Util.bool(m.options.get("remap"), true)) {
                         name = mappings.method(resolvedOwner, name, descriptor);
@@ -67,14 +68,13 @@ public final class TargetResolver {
                     if (classes != null && !targetNamespace.equals(namespace)) {
                         report.diagnostic("LITERAL_NAMESPACE_UNVERIFIED", m.id, "remap=false selector remains in input namespace; output-namespace reference was not used", false);
                     } else if (classes != null) {
-                        List<ClassIndex.Match> matches = classes.methods(resolvedOwner, name, descriptor);
+                        List<ClassIndex.Match> matches = classes.declaredMethods(resolvedOwner, name, descriptor);
                         target.candidateSource = "REFERENCE_BYTECODE";
                         target.candidateKeys = matches.stream().map(v -> key(artifacts.get(m.artifact).loader, targetNamespace, v.owner(), v.method().name, v.method().desc))
                                 .distinct().sorted(Comparator.comparing(TargetKey::display)).limit(options.maxSelectorCandidates).toList();
                         target.candidates = target.candidateKeys.stream().map(TargetKey::display).toList();
-                        if(classes.lookupTruncated())target.candidatesTruncated=true;
                         if (matches.size() > options.maxSelectorCandidates) candidateLimit(m, target);
-                        if (matches.size() == 1 && !classes.lookupTruncated() && ((!descriptor.isEmpty() && !name.contains("*")) || classes.hierarchyComplete(resolvedOwner))) {
+                        if (matches.size() == 1) {
                             ClassIndex.Match match = matches.getFirst();
                             target.key = key(artifacts.get(m.artifact).loader, targetNamespace, match.owner(), match.method().name, match.method().desc);
                             target.resolution = Resolution.RESOLVED; target.existence = Existence.VERIFIED; target.bytecodeHash = match.hash();
@@ -83,12 +83,21 @@ public final class TargetResolver {
                             InstructionMatcher.resolve(match.method(), m, target, mappings, rawReference -> reference(config, m, rawReference), report);
                         } else if (!matches.isEmpty()) {
                             target.resolution = Resolution.AMBIGUOUS;
-                            if (!classes.hierarchyComplete(resolvedOwner)) report.diagnostic("REFERENCE_HIERARCHY_INCOMPLETE", resolvedOwner, "Incomplete hierarchy may hide additional selector candidates", false);
                         }
-                        else if (classes.contains(resolvedOwner) && classes.hierarchyComplete(resolvedOwner)) {
-                            target.existence = Existence.MISSING; target.resolution = Resolution.UNRESOLVED;
-                            report.diagnostic("TARGET_MISSING", target.key.display(), "No matching method in complete reference hierarchy", false);
-                        } else { target.resolution = Resolution.UNRESOLVED; report.diagnostic("REFERENCE_HIERARCHY_INCOMPLETE", resolvedOwner, "Target or declaring superclass unavailable / ambiguous", false); }
+                        else {
+                            // Hierarchy lookup is evidence about inheritance only, never an injection target.
+                            List<ClassIndex.Match> inherited=classes.methods(resolvedOwner,name,descriptor);
+                            target.candidatesTruncated=classes.lookupTruncated();
+                            target.resolution=Resolution.UNRESOLVED;
+                            if(!inherited.isEmpty()) {
+                                if(inherited.size()==1)target.declaringOwner=inherited.getFirst().owner();
+                                target.limitation="Only inherited declarations were found. Mixin root selectors and Overwrite target the declared class's own methods; inherited bytecode is not a verified modification target. Other transformer merges remain unverified.";
+                                report.diagnostic("TARGET_INHERITED_NOT_LOCAL",m.id,"No matching declaration in "+resolvedOwner+"; inherited declarations are informational only: "+Util.previewJson(inherited.stream().limit(8).map(v->v.owner()+"."+v.method().name+v.method().desc).toList(),1024),false);
+                            } else if(classes.contains(resolvedOwner)&&classes.hierarchyComplete(resolvedOwner)) {
+                                target.existence=Existence.MISSING;
+                                report.diagnostic("TARGET_MISSING",target.key.display(),"No matching method declaration in reference target class",false);
+                            } else report.diagnostic("REFERENCE_HIERARCHY_INCOMPLETE",resolvedOwner,"Target or hierarchy unavailable / ambiguous; missing declaration remains unverified",false);
+                        }
                     }
                     if (target.resolution != Resolution.RESOLVED) report.diagnostic("TARGET_" + target.resolution, m.id, "Selector not uniquely resolved: " + owner + "." + raw, false);
                 } catch (IllegalArgumentException ex) { report.diagnostic("SELECTOR_UNSUPPORTED", m.id, raw + ": " + ex.getMessage(), false); }

@@ -80,13 +80,13 @@ class SelectorSafetyTest {
         Report r=scan(options(mod(directory,"a",new Method("Overwrite","attack()V",Map.of("aliases",List.of("legacyAttack"))))));
         assertTrue(diagnostic(r,"OVERWRITE_ALIASES_UNVERIFIED"));assertEquals(List.of("legacyAttack"),r.modifications.getFirst().options.get("aliases"));
     }
-    @Test void differentInterfaceDeclarationsDoNotBecomeOneInheritedTarget() throws Exception {
+    @Test void interfaceDeclarationsDoNotBecomeLocalInjectionTargets() throws Exception {
         Map<String,byte[]> entries=new TreeMap<>();entries.put("game/Child.class",empty("game/Child","game/Parent","game/J"));entries.put("game/Parent.class",empty("game/Parent","java/lang/Object","game/I"));
         for(String owner:List.of("game/I","game/J")) {
             ClassWriter writer=new ClassWriter(0);writer.visit(Opcodes.V21,Opcodes.ACC_PUBLIC|Opcodes.ACC_INTERFACE|Opcodes.ACC_ABSTRACT,owner,null,"java/lang/Object",null);
             writer.visitMethod(Opcodes.ACC_PUBLIC|Opcodes.ACC_ABSTRACT,"attack","()V",null,null).visitEnd();writer.visitEnd();entries.put(owner+".class",writer.toByteArray());
         }
         var o=options(mod(directory,"a","game/Child","*",new Method("Inject","attack()V")));o.gameJar=jar(directory.resolve("interfaces.jar"),entries);Target t=scan(o).modifications.getFirst().targets.getFirst();
-        assertEquals(Resolution.AMBIGUOUS,t.resolution);assertEquals(List.of("game/I.attack()V","game/J.attack()V"),t.candidates);
+        assertEquals(Resolution.UNRESOLVED,t.resolution);assertTrue(t.candidates.isEmpty());assertNull(t.declaringOwner);assertFalse(t.instructionsVerified);
     }
 }

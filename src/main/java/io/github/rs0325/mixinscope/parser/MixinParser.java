@@ -41,10 +41,21 @@ public final class MixinParser {
                         if (mixin == null) { report.diagnostic("MIXIN_ANNOTATION_MISSING", className, "Registered class lacks @Mixin", false); continue; }
                         Map<String, Object> declaration = values(mixin);
                         List<String> owners = new ArrayList<>();
-                        owners.addAll(Util.strings(declaration.get("value"))); owners.addAll(Util.strings(declaration.get("targets")));
+                        boolean invalidTargetType=false;
+                        for(String type:Util.strings(declaration.get("value"))) {
+                            if(type.startsWith("L")&&type.endsWith(";"))owners.add(type);
+                            else {invalidTargetType=true;report.diagnostic("MIXIN_TARGET_TYPE_UNSUPPORTED",className,"Primitive/array @Mixin value retained but not treated as a class target: "+type,false);}
+                        }
+                        owners.addAll(Util.strings(declaration.get("targets")));
                         owners = owners.stream().map(MixinParser::classOwner).distinct().sorted().toList();
                         if (owners.isEmpty()) report.diagnostic("MIXIN_TARGET_MISSING", className, "No static mixin target classes", false);
                         for (MethodNode method : node.methods) {
+                            options.checkBudget();
+                            if((method.name.equals("<init>")||method.name.equals("<clinit>"))&&initializerEffects(method,node.superName)) {
+                                String limitation="Non-trivial Mixin initializer declared for "+owners.size()+" targets (first 8: "+owners.stream().limit(8).map(owner->Util.preview(owner,128)).toList()+"); initializer regions, merge effects and runtime applicability are not analyzed or executed.";
+                                Transformer initializer=new Transformer(artifact.hash,"MIXIN_INITIALIZER",path+"#"+method.name+method.desc,limitation);
+                                if(!report.transformers.contains(initializer)){report.transformers.add(initializer);report.diagnostic("MIXIN_INITIALIZER_UNANALYZED",className+"."+method.name+method.desc,limitation,false);}
+                            }
                             List<AnnotationNode> annotations = annotations(method.visibleAnnotations, method.invisibleAnnotations);
                             boolean recognized = false;
                             for (AnnotationNode annotation : annotations) {
@@ -67,7 +78,9 @@ public final class MixinParser {
                                 m.annotationDescriptor = annotation.desc;
                                 m.owners = owners; m.referenceOnly = reference; m.sides = new TreeSet<>(side);
                                 m.applicability = side.isEmpty() ? Applicability.INELIGIBLE : config.applicability;
+                                if(invalidTargetType&&m.applicability!=Applicability.INELIGIBLE)m.applicability=Applicability.UNKNOWN;
                                 m.options = values(annotation); m.options.put("mixinDeclaration", declaration);
+                                if(overwrite&&!Util.strings(m.options.get("aliases")).isEmpty())report.diagnostic("OVERWRITE_ALIASES_UNVERIFIED",className+"."+method.name,"Aliases retained but not resolved; additional target candidates may be missed",false);
                                 List<Map<String, Object>> parameters = parameterAnnotations(method);
                                 if (!parameters.isEmpty()) {
                                     m.options.put("parameterAnnotations", parameters);
@@ -129,6 +142,12 @@ public final class MixinParser {
         else if (!knownProfile()) report.diagnostic("MIXIN_VERSION_UNSUPPORTED", "profile", "Declared version " + options.mixinVersion + " has no verified defaults profile; Mixin 0.8.7 defaults are assumed", false);
     }
     private boolean knownProfile() { return options.mixinVersion.equals("0.8.7") || options.mixinVersion.endsWith("+mixin.0.8.7"); }
+    private static boolean initializerEffects(MethodNode method,String parent) {
+        List<AbstractInsnNode> code=new ArrayList<>();for(AbstractInsnNode instruction:method.instructions)if(instruction.getOpcode()>=0)code.add(instruction);
+        if(code.isEmpty()||code.size()==1&&code.getFirst().getOpcode()==Opcodes.RETURN)return false;
+        return !(method.name.equals("<init>")&&code.size()==3&&code.get(0) instanceof VarInsnNode load&&load.getOpcode()==Opcodes.ALOAD&&load.var==0&&
+                code.get(1) instanceof MethodInsnNode call&&call.getOpcode()==Opcodes.INVOKESPECIAL&&call.owner.equals(parent)&&call.name.equals("<init>")&&call.desc.equals("()V")&&code.get(2).getOpcode()==Opcodes.RETURN);
+    }
     public static ClassNode classNode(byte[] bytes, boolean code) {
         if (bytes.length < 8 || bytes[0] != (byte) 0xca || bytes[1] != (byte) 0xfe || bytes[2] != (byte) 0xba || bytes[3] != (byte) 0xbe)
             throw new IllegalArgumentException("Invalid class file header");

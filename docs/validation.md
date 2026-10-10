@@ -39,6 +39,7 @@ MixinExtras profile は [0.3.2](https://github.com/LlamaLad7/MixinExtras/tree/f7
 | Overwrite 2 個 | 11 または 22、元処理 0 回 | MS002 / HIGH；実行失敗を断定しない |
 | 同じ操作への require=1 Redirect 2 個 | 実際の InjectionError を期待して検証 | MS003 / HIGH、参照命令一致の confidence HIGH |
 | index=0 ModifyArg 2 個 | 順序によって 14 または 16、元処理 1 回 | MS006 / MEDIUM；明示 index と命令の一致 |
+| constructor / static initializer の field merge | 元の seed=3、Mixin の instance seed=7 / static seed=5 | MIXIN_INITIALIZER_UNANALYZED；架空の injector finding を生成しない |
 
 `build/runtime-fixture/results.json` に観測結果を保存する。順序を保証するテストではなく、許容する順序における対照である。`CompiledFixtureTest` は同じ javac 出力を JAR にして、ロードせずに annotation / handler descriptor / direct-call syntax / 元 bytecode を解析する。runtime 対照の範囲は 0.4.1 と自作クラスであり、他の版・Minecraft の loader 環境へ一般化しない。
 
@@ -69,3 +70,9 @@ FerriteCore Fabric `W4lg2p7U` の primary file は配布元でも `-dev.jar` で
 ## リリース前の目視確認
 
 `./gradlew demo` 後に `build/demo/report.html` をブラウザで開き、狭い画面・キーボード Tab 操作・検索・フィルタ・target graph・suppressed findings・長い Mod 名を確認する。DOM 自動テストだけでは外観確認の完了としない。
+
+## 極端な入力と出力 budget
+
+大量の wildcard と長い descriptor は regex の backtracking / stack に依存せず処理する。owner / selector の組合せを max-targets で制限し、skippedTargets と raw declarations を保持する。深い / cyclic hierarchy、異なる interface 宣言、class path と internal name の不一致、欠けた platform Object を回帰テストで検証する。
+
+JSON / HTML payload は UTF-8 byte budget を書込み前に確認する。HTML-safe escape による膨張も上限に含める。text は全 JSON payload を事前検証する。超過を終了コード 2 とし、既存 destination の保持を3形式で確認する。巨大な evidence は preview へ制限し、元 annotation を inventory に残す。これらは OS の CPU / heap sandbox ではなく、全入力に対するピークメモリの保証はしない。

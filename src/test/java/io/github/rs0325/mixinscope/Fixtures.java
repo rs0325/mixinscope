@@ -82,7 +82,11 @@ final class Fixtures {
         }
         return file;
     }
-    static Path game(Path directory) throws IOException { return jar(directory.resolve("game.jar"), Map.of("game/Player.class", gameClass("game/Player", "java/lang/Object"))); }
+    static Path game(Path directory) throws IOException {
+        // An explicitly complete synthetic hierarchy; no claim that this is the real platform Object.
+        ClassWriter object=new ClassWriter(0);object.visit(Opcodes.V21,Opcodes.ACC_PUBLIC,"java/lang/Object",null,null,null);object.visitEnd();
+        return jar(directory.resolve("game.jar"),Map.of("game/Player.class",gameClass("game/Player","java/lang/Object"),"java/lang/Object.class",object.toByteArray()));
+    }
     static byte[] gameClass(String owner, String parent) {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS); writer.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, owner, null, parent, null);
         for (String desc : List.of("()V", "(I)V")) {

@@ -37,6 +37,7 @@ final class InjectionCandidates {
                     int end=target.indexOf(';'),colon=target.indexOf(':');
                     if(!target.startsWith("L")||end<=1||colon<=end+1||colon==target.length()-1)throw new IllegalArgumentException("Non-exact FIELD mapping is not verified");
                     String owner=target.substring(1,end),name=target.substring(end+1,colon),desc=target.substring(colon+1);
+                    if(!TargetResolver.validFieldDescriptor(desc))throw new IllegalArgumentException("Invalid FIELD descriptor");
                     target="L"+mappings.owner(owner)+";"+mappings.field(owner,name,desc)+":"+mappings.descriptor(desc);
                 }
                 case "NEW" -> {

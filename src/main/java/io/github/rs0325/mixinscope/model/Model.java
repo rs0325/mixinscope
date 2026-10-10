@@ -82,7 +82,7 @@ public final class Model {
     }
     public static final class Coverage {
         public int artifacts, failedArtifacts, modifications, unresolvedTargets, ambiguousTargets,
-                   unknownApplicability, skippedPairs, suppressedFindings;
+                   unknownApplicability, skippedPairs, skippedTargets, suppressedFindings;
         public boolean partial;
         public List<Diagnostic> diagnostics = new ArrayList<>();
     }

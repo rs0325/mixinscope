@@ -56,7 +56,7 @@ public final class ReportHistory {
         report.baseline.put("comparable", comparable);
     }
     private static boolean noGaps(Report report) {
-        return report.coverage.unresolvedTargets == 0 && report.coverage.ambiguousTargets == 0 && report.coverage.skippedPairs == 0 &&
+        return report.coverage.unresolvedTargets == 0 && report.coverage.ambiguousTargets == 0 && report.coverage.skippedPairs == 0 && report.coverage.skippedTargets==0 &&
                 report.coverage.unknownApplicability == 0 && report.transformers.isEmpty() && report.coverage.diagnostics.isEmpty();
     }
     private static Map<String, Object> read(Path file) throws IOException { return Util.json(readBytes(file)); }

@@ -18,7 +18,8 @@
     "RedirectA",
     "RedirectB",
     "ArgumentA",
-    "ArgumentB"
+    "ArgumentB",
+    "InitializerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

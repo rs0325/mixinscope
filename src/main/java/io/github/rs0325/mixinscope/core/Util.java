@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.*;
+import java.io.*;
 
 public final class Util {
     private Util() {}
@@ -34,6 +35,25 @@ public final class Util {
     public static int integer(Object value, int fallback) { return value instanceof Number n ? n.intValue() : fallback; }
     public static boolean bool(Object value, boolean fallback) { return value instanceof Boolean b ? b : fallback; }
     public static String owner(String value) { return value.replace('.', '/'); }
+    public static String preview(String value,int maximum){return value.length()<=maximum?value:value.substring(0,maximum)+" [truncated; see inventory]";}
+    public static String previewJson(Object value,int maximum) {
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+        try{JSON.writeValue(new BoundedOutputStream(bytes,maximum),value);return bytes.toString(StandardCharsets.UTF_8);}
+        catch(IOException error){return "[metadata preview exceeds "+maximum+" bytes; see complete inventory]";}
+    }
+    /** '*' is the only metacharacter. Greedy matching avoids regex backtracking and checks the scan budget. */
+    public static boolean matchesGlob(String pattern,String value,Runnable checkBudget) {
+        int p=0,v=0,star=-1,retry=0,steps=0;checkBudget.run();
+        while(v<value.length()) {
+            if((++steps&1023)==0)checkBudget.run();
+            if(p<pattern.length()&&pattern.charAt(p)!='*'&&pattern.charAt(p)==value.charAt(v)){p++;v++;}
+            else if(p<pattern.length()&&pattern.charAt(p)=='*'){star=p++;retry=v;}
+            else if(star>=0){p=star+1;v=++retry;}
+            else return false;
+        }
+        while(p<pattern.length()&&pattern.charAt(p)=='*'){p++;if((++steps&1023)==0)checkBudget.run();}
+        return p==pattern.length();
+    }
     public static Set<String> sides(String side) {
         return new TreeSet<>(switch (side) { case "client" -> List.of("client"); case "server" -> List.of("server"); default -> List.of("client", "server"); });
     }

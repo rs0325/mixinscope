@@ -56,6 +56,11 @@ class CompiledFixtureTest {
             assertEquals(Severity.HIGH,f.severity);assertEquals(Confidence.HIGH,f.confidence);
         }
     }
+    @Test void actualInitializerBytecodeIsCoverageRatherThanAnInventedInjector() throws Exception {
+        Report r=analyze("InitializerCalculator","InitializerMixin");assertTrue(r.modifications.isEmpty());assertTrue(r.findings.isEmpty());
+        assertTrue(diagnostic(r,"MIXIN_INITIALIZER_UNANALYZED"));assertEquals(2,r.transformers.stream().filter(t->t.kind().equals("MIXIN_INITIALIZER")).count());
+        assertTrue(r.transformers.stream().anyMatch(t->t.resource().contains("<clinit>")));assertTrue(r.transformers.stream().anyMatch(t->t.resource().contains("<init>")));
+    }
     @Test void validNonCancellableCallbacksStayLowAndExplicitArgumentIdentityIsVerified() throws Exception {
         Report safe=analyze("SafeCalculator","SafeA","SafeB");assertEquals(Set.of("MS001"),rules(safe));assertTrue(safe.findings.stream().allMatch(f->f.severity==Severity.LOW));
         Report argument=analyze("ArgumentCalculator","ArgumentA","ArgumentB");

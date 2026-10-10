@@ -35,12 +35,16 @@ public final class TargetResolver {
         Map<String, Artifact> artifacts = new HashMap<>();
         for (MixinConfig c : report.configs) configs.put(c.artifact + "\u0000" + c.path, c);
         for (Artifact a : report.artifacts) artifacts.put(a.hash, a);
+        long created=0,skipped=0;
         for (Modification m : report.modifications) {
             options.checkBudget();
             MixinConfig config = configs.get(m.artifact + "\u0000" + m.config);
             if (m.referenceOnly) continue;
             InjectionCandidates.normalize(m,mappings,options.namespace,Util.bool(m.options.get("remap"),true)?namespace:options.namespace,rawReference->reference(config,m,rawReference),report);
-            for (String owner : m.owners) for (String raw : m.selectors) {
+            long attempted=0,total=(long)m.owners.size()*m.selectors.size();
+            combinations: for (String owner : m.owners) for (String raw : m.selectors) {
+                options.checkBudget();
+                if(created>=options.maxTargets)break combinations;created++;attempted++;
                 Target target = new Target(); target.rawOwner = owner; target.rawSelector = raw;
                 m.targets.add(target);
                 String selector = reference(config, m, raw);
@@ -68,8 +72,9 @@ public final class TargetResolver {
                         target.candidateKeys = matches.stream().map(v -> key(artifacts.get(m.artifact).loader, targetNamespace, v.owner(), v.method().name, v.method().desc))
                                 .distinct().sorted(Comparator.comparing(TargetKey::display)).limit(options.maxSelectorCandidates).toList();
                         target.candidates = target.candidateKeys.stream().map(TargetKey::display).toList();
+                        if(classes.lookupTruncated())target.candidatesTruncated=true;
                         if (matches.size() > options.maxSelectorCandidates) candidateLimit(m, target);
-                        if (matches.size() == 1 && ((!descriptor.isEmpty() && !name.contains("*")) || classes.hierarchyComplete(resolvedOwner))) {
+                        if (matches.size() == 1 && !classes.lookupTruncated() && ((!descriptor.isEmpty() && !name.contains("*")) || classes.hierarchyComplete(resolvedOwner))) {
                             ClassIndex.Match match = matches.getFirst();
                             target.key = key(artifacts.get(m.artifact).loader, targetNamespace, match.owner(), match.method().name, match.method().desc);
                             target.resolution = Resolution.RESOLVED; target.existence = Existence.VERIFIED; target.bytecodeHash = match.hash();
@@ -88,7 +93,10 @@ public final class TargetResolver {
                     if (target.resolution != Resolution.RESOLVED) report.diagnostic("TARGET_" + target.resolution, m.id, "Selector not uniquely resolved: " + owner + "." + raw, false);
                 } catch (IllegalArgumentException ex) { report.diagnostic("SELECTOR_UNSUPPORTED", m.id, raw + ": " + ex.getMessage(), false); }
             }
+            skipped+=total-attempted;
         }
+        report.coverage.skippedTargets=(int)Math.min(Integer.MAX_VALUE,skipped);
+        if(skipped>0)report.diagnostic("TARGET_LIMIT","resolver",skipped+" owner/selector combinations skipped after limit "+options.maxTargets+"; raw declarations are retained",false);
         declarationCandidates();
     }
     private record OwnerKey(String game, String loader, String namespace, String owner) {
@@ -102,11 +110,10 @@ public final class TargetResolver {
         for (Modification m : report.modifications) for (Target t : m.targets) {
             options.checkBudget();
             if (t.key == null || t.resolution != Resolution.AMBIGUOUS || !t.candidateSource.equals("NONE")) continue;
-            String pattern = java.util.regex.Pattern.quote(t.key.name()).replace("*", "\\E.*\\Q");
             List<TargetKey> matches = new ArrayList<>(); int count = 0;
             for (TargetKey key : declarations.getOrDefault(new OwnerKey(t.key), Set.of())) {
                 options.checkBudget();
-                if (key.name().matches(pattern) && (t.key.descriptor().isEmpty() || t.key.descriptor().equals(key.descriptor()))) {
+                if (Util.matchesGlob(t.key.name(),key.name(),options::checkBudget) && (t.key.descriptor().isEmpty() || t.key.descriptor().equals(key.descriptor()))) {
                     count++; if (matches.size() < options.maxSelectorCandidates) matches.add(key);
                 }
             }
@@ -153,7 +160,26 @@ public final class TargetResolver {
         return new Selector(Util.owner(owner), name, desc);
     }
     public static boolean validDescriptor(String descriptor) {
-        // ASM Type alone permits some malformed descriptors, so also consume the entire grammar.
-        return descriptor.matches("\\((?:[ZBCSIJFD]|\\[+(?:[ZBCSIJFD]|L[^.;\\[()]+;)|L[^.;\\[()]+;)*\\)(?:V|[ZBCSIJFD]|\\[+(?:[ZBCSIJFD]|L[^.;\\[()]+;)|L[^.;\\[()]+;)");
+        // Consume the JVM grammar iteratively: large valid/invalid strings must not overflow a regex stack.
+        if(descriptor.isEmpty()||descriptor.charAt(0)!='(')return false;
+        int i=1,slots=0;
+        while(i<descriptor.length()&&descriptor.charAt(i)!=')') {
+            int start=i,end=fieldEnd(descriptor,i);if(end<0)return false;
+            char type=descriptor.charAt(start);slots+=type=='J'||type=='D'?2:1;if(slots>255)return false;i=end;
+        }
+        if(i>=descriptor.length()||++i>=descriptor.length())return false;
+        return descriptor.charAt(i)=='V'?i+1==descriptor.length():fieldEnd(descriptor,i)==descriptor.length();
+    }
+    public static boolean validFieldDescriptor(String descriptor){return !descriptor.isEmpty()&&fieldEnd(descriptor,0)==descriptor.length();}
+    private static int fieldEnd(String descriptor,int start) {
+        int i=start,dimensions=0;
+        while(i<descriptor.length()&&descriptor.charAt(i)=='['){i++;if(++dimensions>255)return -1;}
+        if(i>=descriptor.length())return -1;
+        char type=descriptor.charAt(i++);if("ZBCSIJFD".indexOf(type)>=0)return i;
+        if(type!='L')return -1;int nameStart=i;
+        while(i<descriptor.length()&&descriptor.charAt(i)!=';') {
+            if(".[()".indexOf(descriptor.charAt(i))>=0)return -1;i++;
+        }
+        return i>nameStart&&i<descriptor.length()?i+1:-1;
     }
 }

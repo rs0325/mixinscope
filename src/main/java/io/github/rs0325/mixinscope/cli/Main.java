@@ -54,6 +54,8 @@ public final class Main implements Runnable {
         @Option(names="--date", description="Suppression evaluation date, YYYY-MM-DD; default is current UTC date.") String date;
         @Option(names="--max-pairs", defaultValue="100000") int maxPairs;
         @Option(names="--max-selector-candidates", defaultValue="1000") int maxSelectorCandidates;
+        @Option(names="--max-targets", defaultValue="100000", description="Maximum owner/selector combinations to resolve.") int maxTargets;
+        @Option(names="--max-report-mib", defaultValue="64", description="UTF-8 JSON payload budget (including HTML-safe escaping); also checked for text reports.") long maxReport;
         @Option(names="--max-entry-mib", defaultValue="16") long maxEntry;
         @Option(names="--max-total-mib", defaultValue="256") long maxTotal;
         @Option(names="--max-archive-mib", defaultValue="128") long maxArchive;
@@ -70,6 +72,7 @@ public final class Main implements Runnable {
             options.mappings = mappings; options.mappingGameVersion = mappingGameVersion; options.refmapContext = refmapContext;
             options.targetJava = targetJava; options.maxPairs = maxPairs; options.maxEntry = maxEntry << 20; options.maxTotal = maxTotal << 20;
             options.maxSelectorCandidates = maxSelectorCandidates;
+            options.maxTargets=maxTargets;
             options.maxArchive = maxArchive << 20; options.maxDepth = maxDepth; options.maxEntries = maxEntries; options.maxRatio = maxRatio; options.timeoutSeconds = timeout;
             Report report = new io.github.rs0325.mixinscope.core.Scanner().scan(options);
             try {
@@ -81,7 +84,11 @@ public final class Main implements Runnable {
             report.displayFilter.putAll(Map.of("mod", mod == null ? "" : mod, "target", target == null ? "" : target, "minSeverity", minimum == null ? "" : minimum.name()));
             report.visibleFindingIds = shown.stream().map(f -> f.id).toList();
             // JSON/HTML preserve the complete inventory for baselines and inspection.
-            String content = switch (format) { case "json" -> Reports.json(report); case "html" -> Reports.html(report); default -> Reports.text(report, shown); };
+            String content;
+            try {
+                content=switch(format){case "json"->Reports.json(report,maxReport<<20);case "html"->Reports.html(report,maxReport<<20);
+                    default->{Reports.validatePayload(report,maxReport<<20);yield Reports.text(report,shown);}};
+            }catch(IOException error){spec.commandLine().getErr().println("ERROR OUTPUT_ERROR: "+error.getMessage());return 2;}
             for (Diagnostic d : report.coverage.diagnostics) spec.commandLine().getErr().println((d.error() ? "ERROR " : "NOTE ") + d.code() + " " + d.source() + ": " + d.message());
             if (output == null) spec.commandLine().getOut().print(content);
             else {
@@ -105,7 +112,7 @@ public final class Main implements Runnable {
             if (!Set.of("client", "server", "both").contains(side)) invalid("Unknown physical side");
             if (!Set.of("text", "json", "html").contains(format)) invalid("Format must be text, json or html");
             if (!Set.of("auto", "fml-12.0").contains(metadataProfile)) invalid("Unknown metadata profile");
-            if (maxPairs < 0 || maxSelectorCandidates < 1 || maxSelectorCandidates > 100_000 || maxDepth < 0 || maxEntries < 1 || maxRatio < 1 || targetJava < 8 || maxEntry < 1 || maxArchive < 1 || maxTotal < 1 ||
+            if (maxPairs < 0 || maxReport<1 || maxReport>512 || maxTargets<1 || maxTargets>1_000_000 || maxSelectorCandidates < 1 || maxSelectorCandidates > 100_000 || maxDepth < 0 || maxEntries < 1 || maxRatio < 1 || targetJava < 8 || maxEntry < 1 || maxArchive < 1 || maxTotal < 1 ||
                     maxEntry > 4096 || maxArchive > 4096 || maxTotal > 8192 || timeout < 1 || timeout > 86400) invalid("Invalid resource limits");
         }
         private void invalid(String reason) { throw new ParameterException(spec.commandLine(), reason); }

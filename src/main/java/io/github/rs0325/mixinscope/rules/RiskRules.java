@@ -12,6 +12,7 @@ public final class RiskRules {
     private final Map<String, List<Change>> index = new TreeMap<>();
     private final Map<String, Set<String>> indexedModifications = new HashMap<>();
     private final Set<String> findingIds = new HashSet<>();
+    private final Map<String,String> evidenceCache=new HashMap<>();
     public RiskRules(ScanOptions options, Report report) { this.options = options; this.report = report; for (Artifact a : report.artifacts) artifacts.put(a.hash, a); }
     public void evaluate() {
         for (Modification m : report.modifications) {
@@ -87,14 +88,18 @@ public final class RiskRules {
         for (String key : List.of("index", "ordinal", "argsOnly", "constant")) if (!Objects.equals(a.options.get(key), b.options.get(key))) return false;
         return true;
     }
-    private static boolean samePoint(Change a, Change b) {
+    private boolean samePoint(Change a, Change b) {
+        options.checkBudget();
         if (a.target.instructionsVerified && b.target.instructionsVerified)
             return !Collections.disjoint(new HashSet<>(a.target.instructions), new HashSet<>(b.target.instructions));
         if (!a.modification.pointCandidatesNormalized || !b.modification.pointCandidatesNormalized || a.modification.normalizedAt.isEmpty() || b.modification.normalizedAt.isEmpty()) return false;
         // Matching slice IDs alone cannot establish matching boundaries in JAR-only mode.
         if (!Objects.equals(a.modification.normalizedSlices, b.modification.normalizedSlices)) return false;
-        for (Map<String, Object> x : a.modification.normalizedAt) for (Map<String, Object> y : b.modification.normalizedAt)
+        long compared=0;
+        for (Map<String, Object> x : a.modification.normalizedAt) for (Map<String, Object> y : b.modification.normalizedAt) {
+            if((++compared&1023)==0)options.checkBudget();
             if (normalizedAt(x).equals(normalizedAt(y))) return true;
+        }
         return false;
     }
     private static Map<String, Object> normalizedAt(Map<String, Object> source) {
@@ -123,7 +128,8 @@ public final class RiskRules {
         if (rule.equals("MS006")) f.limitations.add("Instruction overlap does not prove implicit argument, local-variable, or handler-type identity.");
         for (Change change : List.of(a, b)) {
             Modification m = change.modification;
-            f.evidence.add(m.mixin + "." + m.handler + m.handlerDescriptor + " @" + m.kind + " selectors=" + m.selectors + " defaults=" + m.defaults + " at=" + m.at);
+            f.evidence.add(evidenceCache.computeIfAbsent(m.id,id->Util.preview(m.mixin,256) + "." + Util.preview(m.handler,128) + Util.preview(m.handlerDescriptor,256) + " @" + m.kind +
+                    " selectors=" + Util.previewJson(m.selectors,512) + " defaults=" + Util.previewJson(m.defaults,512) + " at=" + Util.previewJson(m.at,1024)));
             f.limitations.add(change.target.limitation);
         }
         if (conditional) f.limitations.add("Plugin, nested candidate, or unresolved loader selection may prevent simultaneous application.");

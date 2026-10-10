@@ -1,6 +1,6 @@
 {
   "scope": "Static JAR reading only; no Minecraft, downloaded Mods or their plugins executed",
-  "generatedAtUTC": "2026-10-10T03:15:29Z",
+  "generatedAtUTC": "2026-10-10T03:53:36Z",
   "manifestSha256": "0e03f09f2fd4c8500a8aa253c3d35f2c10d02e15007eeb6659d9c4e8a42db1b7",
   "schemaVersion": "1.1",
   "rulesetVersion": "2",
@@ -13,7 +13,7 @@
   "packs": [
     {
       "pack": "fabric-baseline-1.21.1",
-      "seconds": 1.231,
+      "seconds": 1.321,
       "exit": 0,
       "artifacts": 9,
       "configs": 14,
@@ -39,6 +39,7 @@
       "diagnostics": {
         "EXTRAS_LOCAL_UNSUPPORTED": 19,
         "METHOD_MERGE_UNSUPPORTED": 407,
+        "MIXIN_INITIALIZER_UNANALYZED": 138,
         "NESTED_SELECTION_UNKNOWN": 6,
         "PLUGIN_NOT_EXECUTED": 4,
         "TARGET_AMBIGUOUS": 15,
@@ -48,7 +49,7 @@
     },
     {
       "pack": "fabric-1.21.1",
-      "seconds": 1.465,
+      "seconds": 1.596,
       "exit": 0,
       "artifacts": 9,
       "configs": 14,
@@ -74,6 +75,7 @@
       "diagnostics": {
         "EXTRAS_LOCAL_UNSUPPORTED": 19,
         "METHOD_MERGE_UNSUPPORTED": 407,
+        "MIXIN_INITIALIZER_UNANALYZED": 138,
         "NESTED_SELECTION_UNKNOWN": 6,
         "PLUGIN_NOT_EXECUTED": 4,
         "TARGET_AMBIGUOUS": 15,
@@ -94,7 +96,7 @@
     },
     {
       "pack": "fabric-ferrite-dev-1.21.1",
-      "seconds": 0.822,
+      "seconds": 0.793,
       "exit": 0,
       "artifacts": 1,
       "configs": 10,
@@ -111,6 +113,7 @@
       },
       "diagnostics": {
         "METHOD_MERGE_UNSUPPORTED": 16,
+        "MIXIN_INITIALIZER_UNANALYZED": 1,
         "NAMESPACE_UNKNOWN": 1,
         "PLUGIN_NOT_EXECUTED": 8,
         "SELECTOR_UNSUPPORTED": 1,
@@ -119,7 +122,7 @@
     },
     {
       "pack": "forge-1.20.1",
-      "seconds": 1.401,
+      "seconds": 1.076,
       "exit": 0,
       "artifacts": 3,
       "configs": 3,
@@ -144,6 +147,7 @@
         "LOADER_MISMATCH": 1,
         "LOADER_UNKNOWN": 1,
         "METHOD_MERGE_UNSUPPORTED": 78,
+        "MIXIN_INITIALIZER_UNANALYZED": 48,
         "MIXIN_VERSION_ASSUMED": 1,
         "NESTED_SELECTION_UNKNOWN": 2,
         "PLUGIN_NOT_EXECUTED": 3,
@@ -153,7 +157,7 @@
     },
     {
       "pack": "neoforge-1.21.1",
-      "seconds": 0.915,
+      "seconds": 0.957,
       "exit": 0,
       "artifacts": 1,
       "configs": 9,
@@ -170,6 +174,7 @@
       },
       "diagnostics": {
         "METHOD_MERGE_UNSUPPORTED": 16,
+        "MIXIN_INITIALIZER_UNANALYZED": 1,
         "MIXIN_VERSION_ASSUMED": 1,
         "PLUGIN_NOT_EXECUTED": 8,
         "REFMAP_MISSING": 1,
@@ -179,7 +184,7 @@
     },
     {
       "pack": "quilt-1.20.1",
-      "seconds": 1.547,
+      "seconds": 1.604,
       "exit": 0,
       "artifacts": 88,
       "configs": 89,
@@ -205,6 +210,7 @@
         "EXTRAS_LOCAL_UNSUPPORTED": 2,
         "EXTRAS_VERSION_UNVERIFIED": 1,
         "METHOD_MERGE_UNSUPPORTED": 349,
+        "MIXIN_INITIALIZER_UNANALYZED": 90,
         "MIXIN_VERSION_ASSUMED": 1,
         "NESTED_SELECTION_UNKNOWN": 87,
         "PLUGIN_NOT_EXECUTED": 1,

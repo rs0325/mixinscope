@@ -61,6 +61,11 @@ public final class FixtureIntegration {
         if (!Set.of(14, 16).contains(argumentValue) || argument.getField("calls").getInt(null) != 1)
             throw new AssertionError("Order-dependent argument modification control failed");
         cases.put("ArgumentCalculator", Map.of("result", argumentValue, "originalCalls", 1));
+        Class<?> initialized=loader.loadClass("io.github.rs0325.mixinscope.fixture.target.InitializerCalculator");
+        Object instance=initialized.getConstructor().newInstance();
+        int instanceSeed=(Integer)initialized.getMethod("fixtureInstanceSeed").invoke(instance),staticSeed=(Integer)initialized.getMethod("fixtureStaticSeed").invoke(instance);
+        if(instanceSeed!=7||staticSeed!=5||initialized.getField("seed").getInt(instance)!=3)throw new AssertionError("Initializer merge control failed");
+        cases.put("InitializerCalculator",Map.of("targetSeed",3,"mixinInstanceSeed",instanceSeed,"mixinStaticSeed",staticSeed));
         try {
             loader.loadClass("io.github.rs0325.mixinscope.fixture.target.RedirectCalculator");
             throw new AssertionError("Two required redirects to one operation unexpectedly applied");

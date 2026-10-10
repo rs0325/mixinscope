@@ -54,7 +54,7 @@ Tiny v2.0 の owner・method・descriptor を正規化します。**ゲーム JA
 
 Refmap の default mappings を読み、必要なら `--refmap-context <name>` で context を指定します。`--input-namespace` は選択した refmap を適用した後の target selector の namespace を表します。複数 namespace が混ざる pack は分けて解析してください。`remap=false` は literal selector として input namespace に残し、異なる output namespace の参照 bytecode では検証しません。
 
-同じメソッド内に同じ呼出し先が複数あっても、ordinal・slice が異なる命令を指す場合は同一命令の衝突と区別します。参照 JAR は他 Mod の変換前の状態なので、Mixin の全適用パスや実行結果を再現したという意味ではありません。
+同じメソッド内に同じ呼出し先が複数あっても、ordinal・slice が異なる命令を指す場合は同一命令の衝突と区別します。参照 JAR は他 Mod の変換前の状態なので、Mixin の全適用パスや実行結果を再現したという意味ではありません。`java/lang/Object` を含む必要 classpath が欠けると、継承全体を完全とは扱わず、見つからないメソッドを MISSING と断定しません。
 
 Refmap は注入先メソッドと `@At target`、slice の境界にも適用し、元の annotation は保持します。注入点側の `remap=false` はその参照の変換を抑止します。元 bytecode で一致する注入点がない場合は、`require=0` でも診断に残します。
 
@@ -115,7 +115,7 @@ MixinExtras の profile は `--mixinextras-version` で宣言します。numeric
 
 NeoForge の `requiredMods` / `behaviorVersion` は旧版に無条件適用しません。`--metadata-profile fml-12.0` は [固定 FML snapshot](https://github.com/neoforged/FancyModLoader/tree/bcbdb3520249deba18d92de2fcbdcee550c75233) とその Mixin 依存 `0.17.1+mixin.0.8.7` を明示的に宣言する profile です。この snapshot の numeric behaviorVersion は 0.17.1 を許容し、既定 compatibility は 17001 です。Maven qualifier・独自の loader 依存版は未検証にします。これは Sponge Mixin の版 0.8.7 と異なる番号です。requiredMods の presence は入力候補と宣言した minecraft / neoforge から評価し、実際の依存選択は再現しません。古い NeoForge で `META-INF/mods.toml` を使う場合は `--loader neoforge` を指定してください。
 
-未対応の独自 selector、MixinExtras expression / local capture、method merge / intrinsic、動的登録は diagnostic に残します。plugin の getMixins / shouldApplyMixin / preApply / postApply は実行しません。ローダーの依存解決・JAR 選択も完全には再現しません。登録情報のない任意 transformer や、別メソッドを介した意味的干渉は検出できません。
+未対応の独自 selector、MixinExtras expression / local capture、method merge / intrinsic、Overwrite aliases、動的登録は diagnostic に残します。非自明な constructor / static initializer は未解析の merge として coverage に記録します。plugin の getMixins / shouldApplyMixin / preApply / postApply は実行しません。ローダーの依存解決・JAR 選択も完全には再現しません。登録情報のない任意 transformer や、別メソッドを介した意味的干渉は検出できません。
 
 ## 終了コードと制限
 
@@ -123,7 +123,9 @@ NeoForge の `requiredMods` / `behaviorVersion` は旧版に無条件適用し�
 - `1`：明示した `--fail-on` の閾値以上の、抑制されていない finding がある。
 - `2`：入力・解析・出力エラー、部分失敗。`--strict` は diagnostic がある場合も 2 にします。2 は 1 に優先します。
 
-入力 Mod の class loading・初期化・plugin 実行はありません。ZIP entry の CRC、重複、unsafe path、symlink、展開量等をチェックします。既定の上限は archive 128 MiB、entry 16 MiB、総展開量 256 MiB、深さ 4、entry 50,000、圧縮比 200、selector ごとの候補 1,000、candidate pairs 100,000、協調的な時間制限 120 秒です。`scan --help` のオプションで調整できます。候補・pair 上限による省略は報告します。時間制限は Java 内の処理単位で確認するもので、OS の sandbox や強制 CPU 制限ではありません。
+入力 Mod の class loading・初期化・plugin 実行はありません。ZIP entry の CRC、重複、unsafe path、symlink、展開量等をチェックします。既定の上限は archive 128 MiB、entry 16 MiB、総展開量 256 MiB、深さ 4、entry 50,000、圧縮比 200、selector ごとの候補 1,000、owner / selector の組合せ 100,000、candidate pairs 100,000、協調的な時間制限 120 秒です。`scan --help` のオプションで調整できます。候補・target・pair 上限による省略は報告します。参照継承の探索は 256 levels / 4,096 visits、完全性の確認は 256 nodes までで、打ち切りは未検証として報告します。wildcard は regex を使わず、照合中にも時間予算を確認します。descriptor は反復で読み、JVM の array / 引数 slot 上限を確認します。時間制限は Java 内の処理単位で確認するもので、OS の sandbox や強制 CPU 制限ではありません。
+
+JSON payload の UTF-8 展開量は既定 64 MiB（`--max-report-mib`）までです。HTML は escape 後の payload、text も全 inventory の JSON payload を検査します。超過時は出力を黙って削らず、終了コード 2 を返し、既存の出力ファイルを保持します。evidence の長い文字列は明示的な preview とし、元の annotation は inventory に残します。
 
 ## 自作の例と検証
 

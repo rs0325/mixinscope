@@ -66,6 +66,7 @@ public final class InstructionMatcher {
         if (kind.equals("FIELD")) {
             int end = rawTarget.indexOf(';'), colon = rawTarget.indexOf(':');
             if (!rawTarget.startsWith("L") || end <= 1 || colon <= end + 1 || colon == rawTarget.length() - 1) throw new IllegalArgumentException("FIELD requires Lowner;name:descriptor");
+            if(!TargetResolver.validFieldDescriptor(rawTarget.substring(colon+1)))throw new IllegalArgumentException("Invalid FIELD descriptor");
         }
         if (kind.equals("NEW") && (rawTarget.isEmpty() || rawTarget.contains("("))) throw new IllegalArgumentException("NEW constructor-descriptor queries are unsupported; use class owner");
         List<Integer> matches = new ArrayList<>();

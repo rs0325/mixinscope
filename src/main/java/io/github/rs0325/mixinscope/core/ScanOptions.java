@@ -10,7 +10,7 @@ public final class ScanOptions {
             side = "both", namespace = "unknown", outputNamespace, gameNamespace,
             mappingGameVersion, mixinVersion = "unknown", mixinExtrasVersion = "unknown", refmapContext;
     public String metadataProfile = "auto";
-    public int targetJava = 21, maxPairs = 100_000, maxSelectorCandidates = 1000;
+    public int targetJava = 21, maxPairs = 100_000, maxSelectorCandidates = 1000, maxTargets=100_000;
     public long maxArchive = 128L << 20, maxEntry = 16L << 20, maxTotal = 256L << 20;
     public int maxDepth = 4, maxEntries = 50_000, maxRatio = 200;
     public long timeoutSeconds = 120;

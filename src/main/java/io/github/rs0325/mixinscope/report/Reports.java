@@ -1,16 +1,40 @@
 package io.github.rs0325.mixinscope.report;
 
 import io.github.rs0325.mixinscope.core.Util;
+import io.github.rs0325.mixinscope.core.BoundedOutputStream;
 import io.github.rs0325.mixinscope.model.Model.*;
 import io.github.rs0325.mixinscope.rules.FindingGroups;
 import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.io.*;
 import java.util.*;
 
 public final class Reports {
     private Reports() {}
     public static String json(Report report) throws IOException {
+        return json(report,64L<<20);
+    }
+    public static String json(Report report,long maximum) throws IOException {return serialize(report,maximum,false);}
+    public static void validatePayload(Report report,long maximum)throws IOException {
+        FindingGroups.refresh(report);Util.JSON.writerWithDefaultPrettyPrinter().writeValue(new BoundedOutputStream(OutputStream.nullOutputStream(),maximum),report);
+    }
+    private static String serialize(Report report,long maximum,boolean htmlSafe)throws IOException {
         FindingGroups.refresh(report);
-        return Util.JSON.writerWithDefaultPrettyPrinter().writeValueAsString(report) + "\n";
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();BoundedOutputStream output=new BoundedOutputStream(bytes,maximum);
+        try(JsonGenerator generator=Util.JSON.getFactory().createGenerator(output)) {
+            if(htmlSafe)generator.setCharacterEscapes(new CharacterEscapes(){
+                private final int[] escapes=CharacterEscapes.standardAsciiEscapesForJSON();
+                {escapes['<']=ESCAPE_CUSTOM;escapes['>']=ESCAPE_CUSTOM;escapes['&']=ESCAPE_CUSTOM;}
+                @Override public int[] getEscapeCodesForAscii(){return escapes;}
+                @Override public SerializableString getEscapeSequence(int c){return switch(c){
+                    case '<'->new SerializedString("\\u003c");case '>'->new SerializedString("\\u003e");case '&'->new SerializedString("\\u0026");
+                    case 0x2028->new SerializedString("\\u2028");case 0x2029->new SerializedString("\\u2029");default->null;};}
+            });
+            Util.JSON.writerWithDefaultPrettyPrinter().writeValue(generator,report);
+        }
+        output.write('\n');return bytes.toString(StandardCharsets.UTF_8);
     }
     public static String text(Report report, List<Finding> findings) {
         StringBuilder out = new StringBuilder("MixinScope — static compatibility analysis\n");
@@ -38,7 +62,7 @@ public final class Reports {
         out.append("\nCoverage: artifacts=").append(c.artifacts).append(", failed=").append(c.failedArtifacts)
                 .append(", modifications=").append(c.modifications).append(", unresolved=").append(c.unresolvedTargets)
                 .append(", ambiguous=").append(c.ambiguousTargets).append(", conditional/unknown=").append(c.unknownApplicability)
-                .append(", skipped pairs=").append(c.skippedPairs).append(", diagnostics=").append(c.diagnostics.size()).append('\n');
+                .append(", skipped pairs=").append(c.skippedPairs).append(", skipped targets=").append(c.skippedTargets).append(", diagnostics=").append(c.diagnostics.size()).append('\n');
         out.append("Findings: ").append(findings.size()).append(" shown / ").append(report.findings.size()).append(" total, suppressed=").append(c.suppressedFindings).append('\n');
         if (c.partial) out.append("PARTIAL: some inputs or analysis steps failed.\n");
         out.append("No findings does not establish compatibility. Mods and plugins were not executed.\n");
@@ -47,8 +71,11 @@ public final class Reports {
         return out.toString();
     }
     public static String html(Report report) throws IOException {
+        return html(report,64L<<20);
+    }
+    public static String html(Report report,long maximum)throws IOException {
         // Data is embedded as JSON in a non-executable script. Escape HTML parser terminators.
-        String data = json(report).replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029");
+        String data=serialize(report,maximum,true);
         return HTML.replace("__REPORT_DATA__", data);
     }
     private static final String HTML = """

@@ -613,7 +613,8 @@
         "skippedPairs",
         "suppressedFindings",
         "partial",
-        "diagnostics"
+        "diagnostics",
+        "skippedTargets"
       ],
       "properties": {
         "artifacts": {
@@ -656,6 +657,10 @@
           "items": {
             "$ref": "#/$defs/diagnostic"
           }
+        },
+        "skippedTargets": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "additionalProperties": false

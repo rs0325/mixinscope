@@ -35,6 +35,15 @@ jobs:
           npm install --global pnpm@11.25.0
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm test:html
+      - name: Native Windows launcher smoke test
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & .\build\install\mixinscope\bin\mixinscope.bat --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\build\install\mixinscope\bin\mixinscope.bat scan .\build\demo\mods --format json --output .\build\demo\windows-report.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node -e "const r=JSON.parse(require('fs').readFileSync('build/demo/windows-report.json'));if(!r.findings.some(f=>f.rule==='MS002'))process.exit(1)"
       - name: Synthetic scale check
         if: runner.os == 'Linux'
         run: ./gradlew --no-daemon benchmark

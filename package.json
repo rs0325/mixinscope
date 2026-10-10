@@ -1,0 +1,6 @@
+{
+  "name": "mixinscope-html-tests",
+  "private": true,
+  "scripts": { "test:html": "node tools/test-html.mjs" },
+  "devDependencies": { "jsdom": "26.1.0" }
+}

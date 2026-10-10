@@ -1,0 +1,32 @@
+{
+  "required": true,
+  "minVersion": "0.8.7",
+  "package": "io.github.rs0325.mixinscope.fixture.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ChainA",
+    "ChainB",
+    "BypassA",
+    "BypassB",
+    "MethodA",
+    "MethodB",
+    "Delegated",
+    "SafeA",
+    "SafeB",
+    "OverwriteA",
+    "OverwriteB",
+    "RedirectA",
+    "RedirectB",
+    "ArgumentA",
+    "ArgumentB",
+    "InitializerMixin",
+    "OptionalInherited",
+    "RequiredInherited",
+    "OwnedOverride",
+    "ExplicitOwner",
+    "InheritedOverwrite"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

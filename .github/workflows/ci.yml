@@ -1,0 +1,71 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Test and package
+        run: ./gradlew --no-daemon test fixtureIntegration demo installDist distZip distTar
+      - name: Compare authored static and runtime evidence
+        run: python tools/evaluate-evidence.py
+      - name: Verify release distributions
+        run: python tools/prepare-release.py
+      - name: CLI smoke test
+        run: |
+          build/install/mixinscope/bin/mixinscope --help
+          build/install/mixinscope/bin/mixinscope scan build/demo/mods --format json --output build/demo/cli-report.json
+          node -e "const r=JSON.parse(require('fs').readFileSync('build/demo/cli-report.json'));if(!r.findings.some(f=>f.rule==='MS002'))process.exit(1)"
+      - name: HTML DOM and JSON Schema tests
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm test:html
+          pnpm test:schema
+          node tools/test-schema.mjs build/runtime-fixture/static/*.json
+      - name: Native Windows launcher smoke test
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & .\build\install\mixinscope\bin\mixinscope.bat --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\build\install\mixinscope\bin\mixinscope.bat scan .\build\demo\mods --format json --output .\build\demo\windows-report.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node -e "const r=JSON.parse(require('fs').readFileSync('build/demo/windows-report.json'));if(!r.findings.some(f=>f.rule==='MS002'))process.exit(1)"
+      - name: Synthetic scale check
+        if: runner.os == 'Linux'
+        run: ./gradlew --no-daemon benchmark
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: mixinscope-${{ runner.os }}
+          path: |
+            build/distributions/*
+            build/release/**
+            build/reports/tests/test/**
+            build/demo/report.*
+            build/demo/*-report.html
+            build/demo/long-label-report.json
+            build/benchmark/results.csv
+            build/benchmark/environment.json
+            build/runtime-fixture/results.json
+            build/runtime-fixture/static/*.json
+            build/evidence-review/authored-results.json

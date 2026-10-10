@@ -1,0 +1,736 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/rs0325/mixinscope/blob/main/docs/report.schema.json",
+  "title": "MixinScope report 1.1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "toolVersion",
+    "rulesetVersion",
+    "environment",
+    "assumptions",
+    "artifacts",
+    "configs",
+    "modifications",
+    "transformers",
+    "findings",
+    "targetIndex",
+    "modIndex",
+    "baseline",
+    "displayFilter",
+    "visibleFindingIds",
+    "coverage",
+    "targetGroups"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.1"
+    },
+    "toolVersion": {
+      "type": "string"
+    },
+    "rulesetVersion": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "object"
+    },
+    "assumptions": {
+      "$ref": "#/$defs/strings"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "configs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/config"
+      }
+    },
+    "modifications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/modification"
+      }
+    },
+    "transformers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/transformer"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "targetIndex": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/strings"
+      }
+    },
+    "modIndex": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/strings"
+      }
+    },
+    "baseline": {
+      "type": "object"
+    },
+    "displayFilter": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "visibleFindingIds": {
+      "$ref": "#/$defs/strings"
+    },
+    "coverage": {
+      "$ref": "#/$defs/coverage"
+    },
+    "targetGroups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/targetGroup"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "strings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nullableString": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "targetKey": {
+      "type": "object",
+      "required": [
+        "gameVersion",
+        "loaderProfile",
+        "namespace",
+        "owner",
+        "name",
+        "descriptor"
+      ],
+      "properties": {
+        "gameVersion": {
+          "type": "string"
+        },
+        "loaderProfile": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "descriptor": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mod": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "hash",
+        "size",
+        "loader",
+        "origins",
+        "mods",
+        "metadata",
+        "nested",
+        "partial"
+      ],
+      "properties": {
+        "hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "loader": {
+          "type": "string"
+        },
+        "origins": {
+          "$ref": "#/$defs/strings"
+        },
+        "mods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mod"
+          }
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "nested": {
+          "type": "boolean"
+        },
+        "partial": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "config": {
+      "type": "object",
+      "required": [
+        "artifact",
+        "path",
+        "packageName",
+        "plugin",
+        "refmap",
+        "sides",
+        "applicability",
+        "raw",
+        "registration",
+        "references",
+        "requiredMods"
+      ],
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/hash"
+        },
+        "path": {
+          "type": "string"
+        },
+        "packageName": {
+          "type": "string"
+        },
+        "plugin": {
+          "type": "string"
+        },
+        "refmap": {
+          "type": "string"
+        },
+        "sides": {
+          "$ref": "#/$defs/strings"
+        },
+        "applicability": {
+          "enum": [
+            "ELIGIBLE",
+            "INELIGIBLE",
+            "CONDITIONAL",
+            "UNKNOWN"
+          ]
+        },
+        "raw": {
+          "type": "object"
+        },
+        "registration": {
+          "type": "object"
+        },
+        "references": {
+          "type": "object"
+        },
+        "requiredMods": {
+          "$ref": "#/$defs/strings"
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "rawOwner",
+        "rawSelector",
+        "normalizedSelector",
+        "key",
+        "resolution",
+        "existence",
+        "candidates",
+        "instructions",
+        "instructionsVerified",
+        "bytecodeHash",
+        "limitation",
+        "candidateKeys",
+        "candidateSource",
+        "candidatesTruncated",
+        "declaringOwner"
+      ],
+      "properties": {
+        "rawOwner": {
+          "type": "string"
+        },
+        "rawSelector": {
+          "type": "string"
+        },
+        "normalizedSelector": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "key": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/targetKey"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolution": {
+          "enum": [
+            "RESOLVED",
+            "AMBIGUOUS",
+            "UNRESOLVED"
+          ]
+        },
+        "existence": {
+          "enum": [
+            "UNVERIFIED",
+            "VERIFIED",
+            "MISSING"
+          ]
+        },
+        "candidates": {
+          "$ref": "#/$defs/strings"
+        },
+        "instructions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "instructionsVerified": {
+          "type": "boolean"
+        },
+        "bytecodeHash": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "limitation": {
+          "type": "string"
+        },
+        "candidateKeys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/targetKey"
+          }
+        },
+        "candidateSource": {
+          "enum": [
+            "NONE",
+            "REFERENCE_BYTECODE",
+            "MOD_DECLARATIONS"
+          ]
+        },
+        "candidatesTruncated": {
+          "type": "boolean"
+        },
+        "declaringOwner": {
+          "description": "Observed declaration owner. For unresolved inherited-only targets this is informational, not the class being modified; read resolution, existence and limitation together.",
+          "$ref": "#/$defs/nullableString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "modification": {
+      "type": "object",
+      "required": [
+        "id",
+        "artifact",
+        "config",
+        "mixin",
+        "handler",
+        "handlerDescriptor",
+        "kind",
+        "owners",
+        "selectors",
+        "sides",
+        "applicability",
+        "options",
+        "defaults",
+        "at",
+        "targets",
+        "referenceOnly",
+        "annotationDescriptor",
+        "handlerAnalysis",
+        "normalizedAt",
+        "normalizedSlices",
+        "pointCandidatesNormalized"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/hash"
+        },
+        "artifact": {
+          "$ref": "#/$defs/hash"
+        },
+        "config": {
+          "type": "string"
+        },
+        "mixin": {
+          "type": "string"
+        },
+        "handler": {
+          "type": "string"
+        },
+        "handlerDescriptor": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "owners": {
+          "$ref": "#/$defs/strings"
+        },
+        "selectors": {
+          "$ref": "#/$defs/strings"
+        },
+        "sides": {
+          "$ref": "#/$defs/strings"
+        },
+        "applicability": {
+          "enum": [
+            "ELIGIBLE",
+            "INELIGIBLE",
+            "CONDITIONAL",
+            "UNKNOWN"
+          ]
+        },
+        "options": {
+          "type": "object"
+        },
+        "defaults": {
+          "type": "object"
+        },
+        "at": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target"
+          }
+        },
+        "referenceOnly": {
+          "type": "boolean"
+        },
+        "annotationDescriptor": {
+          "type": "string"
+        },
+        "handlerAnalysis": {
+          "type": "object"
+        },
+        "normalizedAt": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "normalizedSlices": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "pointCandidatesNormalized": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "id",
+        "rule",
+        "ruleVersion",
+        "category",
+        "reason",
+        "target",
+        "severity",
+        "confidence",
+        "modifications",
+        "mods",
+        "scenarios",
+        "evidence",
+        "limitations",
+        "suppressed",
+        "suppressionReason"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/hash"
+        },
+        "rule": {
+          "type": "string",
+          "pattern": "^MS[0-9]{3}$"
+        },
+        "ruleVersion": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/targetKey"
+        },
+        "severity": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "modifications": {
+          "$ref": "#/$defs/strings"
+        },
+        "mods": {
+          "$ref": "#/$defs/strings"
+        },
+        "scenarios": {
+          "$ref": "#/$defs/strings"
+        },
+        "evidence": {
+          "$ref": "#/$defs/strings"
+        },
+        "limitations": {
+          "$ref": "#/$defs/strings"
+        },
+        "suppressed": {
+          "type": "boolean"
+        },
+        "suppressionReason": {
+          "$ref": "#/$defs/nullableString"
+        }
+      },
+      "additionalProperties": false
+    },
+    "transformer": {
+      "type": "object",
+      "required": [
+        "artifact",
+        "kind",
+        "resource",
+        "limitation"
+      ],
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/hash"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "limitation": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "code",
+        "source",
+        "message",
+        "error"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "error": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "required": [
+        "artifacts",
+        "failedArtifacts",
+        "modifications",
+        "unresolvedTargets",
+        "ambiguousTargets",
+        "unknownApplicability",
+        "skippedPairs",
+        "suppressedFindings",
+        "partial",
+        "diagnostics",
+        "skippedTargets"
+      ],
+      "properties": {
+        "artifacts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failedArtifacts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modifications": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolvedTargets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ambiguousTargets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unknownApplicability": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skippedPairs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "suppressedFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "partial": {
+          "type": "boolean"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic"
+          }
+        },
+        "skippedTargets": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "targetGroup": {
+      "type": "object",
+      "required": [
+        "id",
+        "target",
+        "maxSeverity",
+        "activeMaxSeverity",
+        "maxSeverityConfidence",
+        "findingIds",
+        "rules",
+        "mods",
+        "modifications",
+        "scenarios",
+        "suppressedFindings"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/hash"
+        },
+        "target": {
+          "$ref": "#/$defs/targetKey"
+        },
+        "maxSeverity": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "activeMaxSeverity": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            null
+          ]
+        },
+        "maxSeverityConfidence": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "findingIds": {
+          "$ref": "#/$defs/strings"
+        },
+        "rules": {
+          "$ref": "#/$defs/strings"
+        },
+        "mods": {
+          "$ref": "#/$defs/strings"
+        },
+        "modifications": {
+          "$ref": "#/$defs/strings"
+        },
+        "scenarios": {
+          "$ref": "#/$defs/strings"
+        },
+        "suppressedFindings": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

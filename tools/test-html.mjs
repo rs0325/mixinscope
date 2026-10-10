@@ -1,0 +1,114 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import { JSDOM, VirtualConsole } from 'jsdom';
+
+// DOM tests only: no browser, resource loader or network connection is used.
+const html = fs.readFileSync('build/demo/report.html', 'utf8');
+const errors = [];
+const console = new VirtualConsole();
+console.on('jsdomError', error => errors.push(error));
+const dom = new JSDOM(html, { runScripts: 'dangerously', virtualConsole: console });
+const { document, Event } = dom.window;
+const get = id => document.getElementById(id);
+const change = (id, value) => { get(id).value = value; get(id).dispatchEvent(new Event('input', { bubbles: true })); };
+const report = JSON.parse(get('report').textContent);
+const targetKey = t => t.gameVersion + '|' + t.loaderProfile + '|' + t.namespace + '|' + t.owner + '.' + t.name + t.descriptor;
+const keyFor = name => targetKey(report.modifications.flatMap(m => m.targets).find(t => t.key?.name === name).key);
+assert.equal(errors.length, 0, String(errors));
+assert.equal(document.querySelectorAll('article').length, report.findings.length);
+assert.deepEqual([...document.querySelectorAll('article')].map(a => a.dataset.findingId), report.findings.map(f => f.id));
+assert.equal(get('groups').querySelectorAll('section').length, report.targetGroups.length);
+assert.match(get('groups').textContent, /MS001, MS002/);
+assert.equal(document.querySelectorAll('main').length, 1);
+assert.equal(get('filters').getAttribute('aria-label'), 'Finding filters');
+for (const id of ['search','risk','confidence','mod','target','suppressed']) assert.ok(get(id).labels.length, id + ' has a native label');
+for (const [link,destination] of [['jump-filters','search'],['jump-findings','count'],['jump-inventory','inventory-summary']]) {
+  get(link).click(); assert.equal(document.activeElement, get(destination));
+}
+assert.equal(get('inventory').open,true);
+for (const button of document.querySelectorAll('#groups button, article button')) {
+  assert.ok(button.getAttribute('aria-label')?.startsWith('Inspect target game/Player.attack()V') || button.getAttribute('aria-label')?.startsWith('Filter findings by mod mod_'));
+}
+change('risk', 'HIGH');
+assert.equal(document.querySelectorAll('article').length, 1);
+change('risk', '');
+change('search', 'does-not-exist');
+assert.equal(document.querySelectorAll('article').length, 0);
+change('search', '');
+change('mod', 'mod_c');
+assert.equal(document.querySelectorAll('article').length, 0);
+assert.match(get('graph').textContent, /getAttributeValue/);
+get('graph').querySelector('button').click();
+assert.equal(get('target').value, keyFor('getAttributeValue'));
+assert.equal(document.activeElement, get('target'));
+assert.equal(get('inventory').open, true);
+change('target', '');
+change('mod', 'mod_a');
+assert.equal(document.querySelectorAll('article').length, 2);
+change('target', keyFor('getAttributeValue'));
+assert.equal(document.querySelectorAll('article').length, 0);
+assert.match(get('graph').textContent, /mod_c/);
+change('target', keyFor('attack'));
+assert.match(get('graph').textContent, /mod_a/);
+assert.match(get('graph').textContent, /mod_b/);
+assert.equal(get('graph').querySelectorAll('.edge').length, 2);
+get('groups').querySelector('button').click();
+assert.equal(document.activeElement, get('target'));
+assert.equal(get('target').value, keyFor('attack'));
+assert.ok(document.querySelector('input[type=search]'));
+assert.ok(document.querySelector('button[type=reset]'));
+assert.equal(errors.length, 0, String(errors));
+dom.window.close();
+const malicious = new JSDOM(fs.readFileSync('build/demo/escaped-report.html', 'utf8'), { runScripts: 'dangerously', virtualConsole: console });
+assert.equal(malicious.window.pwned, undefined);
+assert.match(malicious.window.document.getElementById('findings').textContent, /<script>globalThis.pwned=1/);
+assert.equal(errors.length, 0, String(errors));
+malicious.window.close();
+const stress = new JSDOM(fs.readFileSync('build/demo/html-stress-report.html', 'utf8'), { runScripts: 'dangerously', virtualConsole: console });
+const sget = id => stress.window.document.getElementById(id);
+const schange = (id, value) => { sget(id).value = value; sget(id).dispatchEvent(new stress.window.Event('input', { bubbles: true })); };
+const articles = () => stress.window.document.querySelectorAll('article');
+assert.equal(articles().length, 100);
+assert.equal(sget('groups').querySelectorAll('section').length, 2);
+assert.equal([...sget('target').options].filter(o => o.textContent.startsWith('game/Player.attack()V')).length, 2);
+// Native Chrome clears focus when a focused button is hidden; JSDOM retains it.
+// Reproduce that observed behavior so focus restoration cannot inspect too late.
+const hidden = Object.getOwnPropertyDescriptor(stress.window.HTMLElement.prototype, 'hidden');
+Object.defineProperty(sget('more'), 'hidden', {
+  get() { return hidden.get.call(this); },
+  set(value) {
+    hidden.set.call(this, value);
+    if (value && stress.window.document.activeElement === this) this.blur();
+  }
+});
+sget('more').focus(); sget('more').click();assert.equal(articles().length, 200);assert.equal(sget('more').hidden, false);
+assert.equal(stress.window.document.activeElement,sget('more'));
+sget('more').click();assert.equal(articles().length, 253);assert.equal(sget('more').hidden, true);
+assert.equal(stress.window.document.activeElement,sget('count'));
+assert.deepEqual([...articles()].map(a=>a.dataset.findingId),JSON.parse(sget('report').textContent).findings.map(f=>f.id));
+schange('risk', 'HIGH');assert.equal(articles().length,100);assert.equal(sget('more').hidden,false);
+sget('suppressed').checked=false;sget('suppressed').dispatchEvent(new stress.window.Event('input',{bubbles:true}));assert.match(sget('count').textContent,/250 matching/);
+sget('filters').reset();await new Promise(resolve=>stress.window.setTimeout(resolve,10));assert.equal(sget('risk').value,'');assert.equal(sget('suppressed').checked,true);assert.equal(articles().length,100);
+const firstTarget=sget('groups').querySelector('section').dataset.targetKey;schange('target',firstTarget);
+assert.match(sget('count').textContent,/252 matching/);assert.match(sget('graph').textContent,/207 modifications; 200 shown/);assert.equal(sget('graph').querySelectorAll('.edge').length,200);
+assert.equal(sget('groups').querySelectorAll('section').length,1);
+sget('jump-inventory').click();assert.equal(sget('inventory').open,true);assert.equal(stress.window.document.activeElement,sget('inventory-summary'));
+const modButton=stress.window.document.querySelector('article button');modButton.click();assert.equal(stress.window.document.activeElement,sget('mod'));
+schange('confidence','LOW');assert.equal(articles().length,0);assert.equal(sget('more').hidden,true);
+stress.window.close();
+const unknown = new JSDOM(fs.readFileSync('build/demo/unknown-mod-report.html','utf8'),{runScripts:'dangerously',virtualConsole:console});
+assert.equal(unknown.window.document.getElementById('mod').value,'absent-mod');assert.equal(unknown.window.document.querySelectorAll('article').length,0);
+assert.match(unknown.window.document.getElementById('graph').textContent,/0 declared targets/);unknown.window.close();
+const long = new JSDOM(fs.readFileSync('build/demo/long-label-report.html','utf8'),{runScripts:'dangerously',virtualConsole:console});
+const lget=id=>long.window.document.getElementById(id),longReport=JSON.parse(lget('report').textContent);
+assert.ok(longReport.findings[0].target.owner.length>250);assert.ok(longReport.findings[0].mods.some(m=>m.length>250));
+assert.deepEqual([...long.window.document.querySelectorAll('article')].map(a=>a.dataset.findingId),longReport.findings.map(f=>f.id));
+const longButton=lget('groups').querySelector('button');assert.ok(longButton.getAttribute('aria-label').includes(longReport.findings[0].target.owner));longButton.click();
+assert.equal(long.window.document.activeElement,lget('target'));assert.equal(lget('inventory').open,true);assert.match(lget('graph').textContent,/LongTargetName/);
+long.window.close();
+const empty = new JSDOM(fs.readFileSync('build/demo/empty-report.html','utf8'),{runScripts:'dangerously',virtualConsole:console});
+assert.equal(empty.window.document.querySelectorAll('article').length,0);assert.equal(empty.window.document.getElementById('more').hidden,true);
+assert.match(empty.window.document.getElementById('count').textContent,/0 matching \/ 0 total/);empty.window.document.getElementById('jump-findings').click();
+assert.equal(empty.window.document.activeElement,empty.window.document.getElementById('count'));empty.window.close();
+assert.equal(errors.length,0,String(errors));
+process.stdout.write('HTML DOM checks passed: IDs, filters, section navigation/focus, long/empty reports, inventory graph and script execution. Native keyboard and layout require browser QA.\n');

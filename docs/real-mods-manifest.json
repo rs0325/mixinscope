@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Opt-in static real-mod validation; no third-party JARs are redistributed",
+  "artifacts": [
+    {
+      "project": "lithium",
+      "projectId": "gvQqBUqZ",
+      "versionId": "9x0igjLz",
+      "version": "mc1.21.1-0.13.1",
+      "loader": "fabric",
+      "minecraftVersion": "1.21.1",
+      "source": "https://modrinth.com/mod/lithium/version/9x0igjLz",
+      "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/9x0igjLz/lithium-fabric-mc1.21.1-0.13.1.jar",
+      "filename": "lithium-fabric-mc1.21.1-0.13.1.jar",
+      "size": 752804,
+      "sha512": "4250a630d43492da35c4c197ae43082186938fdcb42bafcb6ccad925b79f583abdfdc17ce792c6c6686883f7f109219baecb4906a65d524026d4e288bfbaf146",
+      "sha1": "3dde05dcd5afab3ff6ca77c08f4c82d3a064f3c6",
+      "sha256": "1f4385a8ee2c04e46fdacdfa3f751d17f53d1f4c2332f88942308e6dc2b694f6"
+    },
+    {
+      "project": "lithium",
+      "projectId": "gvQqBUqZ",
+      "versionId": "5szYtenV",
+      "version": "mc1.21.1-0.13.0",
+      "loader": "fabric",
+      "minecraftVersion": "1.21.1",
+      "source": "https://modrinth.com/mod/lithium/version/5szYtenV",
+      "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/5szYtenV/lithium-fabric-mc1.21.1-0.13.0.jar",
+      "filename": "lithium-fabric-mc1.21.1-0.13.0.jar",
+      "size": 752726,
+      "sha512": "d4bd9a9cc37daad8828aa4fa9ca20e4f89d10e30cf6daf4546ef4cf4a684ba21ea0865a9c23cef9d1f4348e9ba4aca9aaca3db9f99534fc610fa78a5ca0bf151",
+      "sha1": "25ab173627db3ed587380ddf635844d7a97ec6c4",
+      "sha256": "10d371fee397bf0306e1e2d863c54c56442bcc2dc6e01603f1469f2fe4910d61"
+    },
+    {
+      "project": "sodium",
+      "projectId": "AANobbMI",
+      "versionId": "b70slbHV",
+      "version": "mc1.21.1-0.6.0-fabric",
+      "loader": "fabric",
+      "minecraftVersion": "1.21.1",
+      "source": "https://modrinth.com/mod/sodium/version/b70slbHV",
+      "url": "https://cdn.modrinth.com/data/AANobbMI/versions/b70slbHV/sodium-fabric-0.6.0%2Bmc1.21.1.jar",
+      "filename": "sodium-fabric-0.6.0+mc1.21.1.jar",
+      "size": 1281394,
+      "sha512": "f7b92989ba6312352623d0311c5bb71eb8da14ea2e5a070f3a959a1f10cfe68cfc8487cf8dbde9187d849d6c04833df2a974be12949efae8aaffe873815ba7a5",
+      "sha1": "d4efadcafc89313befb9bd41e18039584203828e",
+      "sha256": "21b3371f52ab2b2d9abd05e28a4eba3675fb2dbd174614719569d0c365bbf01e"
+    },
+    {
+      "project": "ferrite-core",
+      "projectId": "uXXizFIs",
+      "versionId": "W4lg2p7U",
+      "version": "7.0.2-fabric",
+      "loader": "fabric",
+      "minecraftVersion": "1.21.1",
+      "source": "https://modrinth.com/mod/ferrite-core/version/W4lg2p7U",
+      "url": "https://cdn.modrinth.com/data/uXXizFIs/versions/W4lg2p7U/ferritecore-7.0.2-fabric-dev.jar",
+      "filename": "ferritecore-7.0.2-fabric-dev.jar",
+      "size": 120607,
+      "sha512": "eb40ac82999dc416890e7d035db511f69f6b8638cbdee5c5f079e82642caa95892b4ea4859d25cc350b62ee41137d8a9b818c3ca4f72af21257caccc2166cbd4",
+      "sha1": "9e023297b014b4e845795721f998ba37e2b70f95",
+      "sha256": "dd68128646d05a39695b76d0c6bcde9d2d28592a687195172ba3d310eaf70930"
+    },
+    {
+      "project": "modernfix",
+      "projectId": "nmDcB62a",
+      "versionId": "qO3cN8gB",
+      "version": "5.19.5+mc1.21.1",
+      "loader": "fabric",
+      "minecraftVersion": "1.21.1",
+      "source": "https://modrinth.com/mod/modernfix/version/qO3cN8gB",
+      "url": "https://cdn.modrinth.com/data/nmDcB62a/versions/qO3cN8gB/modernfix-fabric-5.19.5%2Bmc1.21.1.jar",
+      "filename": "modernfix-fabric-5.19.5+mc1.21.1.jar",
+      "size": 422522,
+      "sha512": "840c1f0bc2d4b0766c91841ed46d98ef768eb2a4792501660b8ebd8ec59d4b9e0dd96b0ec48558c58a3bf91035ec09d87b386484ff24a15c191372e4ec503579",
+      "sha1": "0baaf6b7cf92d502c3d81205ef7f3eb2d4f30f32",
+      "sha256": "86b8b4a7e6cb2a24e2ef618343ebf8efa05dced0b43decb042130f431c6786aa"
+    },
+    {
+      "project": "modernfix",
+      "projectId": "nmDcB62a",
+      "versionId": "QkyFrVSl",
+      "version": "5.19.5+mc1.20.1",
+      "loader": "forge",
+      "minecraftVersion": "1.20.1",
+      "source": "https://modrinth.com/mod/modernfix/version/QkyFrVSl",
+      "url": "https://cdn.modrinth.com/data/nmDcB62a/versions/QkyFrVSl/modernfix-forge-5.19.5%2Bmc1.20.1.jar",
+      "filename": "modernfix-forge-5.19.5+mc1.20.1.jar",
+      "size": 778617,
+      "sha512": "c0febd866a6684551dddec9420495e1c0174393ef1f8610029dea72d7cd7c2e3223bdbcb0efb3bfd5d28a2e47db3d9c837547b3f86391e57056a025448f1f596",
+      "sha1": "a0397e9cd8afb2375579c0f98d470e59cada3376",
+      "sha256": "bb44e97f5363688fa7ce15884fb80df12a561219e65e8bbb75c28afd8a4f0f6d"
+    },
+    {
+      "project": "ferrite-core",
+      "projectId": "uXXizFIs",
+      "versionId": "CnpoQxCx",
+      "version": "7.0.2-neoforge",
+      "loader": "neoforge",
+      "minecraftVersion": "1.21.1",
+      "source": "https://modrinth.com/mod/ferrite-core/version/CnpoQxCx",
+      "url": "https://cdn.modrinth.com/data/uXXizFIs/versions/CnpoQxCx/ferritecore-7.0.2-neoforge.jar",
+      "filename": "ferritecore-7.0.2-neoforge.jar",
+      "size": 118911,
+      "sha512": "2a5a7b79473c42572bdbbd1f429a459630d793b35f3eb17051139a94bced2d13c39e9c6309c81368d5502bc46c509e9868a8b5fa3cf93c51375a694cd96c20ac",
+      "sha1": "7279fc52c32a033acc2864a9bcb018b2e04bbd03",
+      "sha256": "235e2081dfe050d7642b0d432a786668f079168505ba5d6bf0ec70c962a36539"
+    },
+    {
+      "project": "qsl",
+      "projectId": "qvIfYCYJ",
+      "versionId": "s8dfz9Xa",
+      "version": "7.7.0+0.92.2-1.20.1",
+      "loader": "quilt",
+      "minecraftVersion": "1.20.1",
+      "source": "https://modrinth.com/mod/qsl/version/s8dfz9Xa",
+      "url": "https://cdn.modrinth.com/data/qvIfYCYJ/versions/s8dfz9Xa/qfapi-7.7.0_qsl-6.3.0_fapi-0.92.2_mc-1.20.1.jar",
+      "filename": "qfapi-7.7.0_qsl-6.3.0_fapi-0.92.2_mc-1.20.1.jar",
+      "size": 2755789,
+      "sha512": "d7bb384b961088ae6fe1e0baef9895cd495a515d8337664bb534c36ae17e48188fc1c50cd9a06e3e53898870ada73e737f63853adf43e744fee11a64bad1059a",
+      "sha1": "fa2868388b175e32e4d3310a5bf065593837bc5c",
+      "sha256": "b22e1f45ebea7c70b3bd86c9b2a5306f272d8aab76704505300fa5135babe708"
+    }
+  ],
+  "packs": [
+    {
+      "id": "fabric-baseline-1.21.1",
+      "artifacts": [
+        "5szYtenV",
+        "b70slbHV",
+        "qO3cN8gB"
+      ],
+      "loader": "fabric",
+      "loaderVersion": "0.16.14",
+      "minecraftVersion": "1.21.1",
+      "namespace": "intermediary",
+      "mixinVersion": "0.8.7",
+      "mixinExtrasVersion": "0.4.1"
+    },
+    {
+      "id": "fabric-1.21.1",
+      "artifacts": [
+        "9x0igjLz",
+        "b70slbHV",
+        "qO3cN8gB"
+      ],
+      "loader": "fabric",
+      "loaderVersion": "0.16.14",
+      "minecraftVersion": "1.21.1",
+      "namespace": "intermediary",
+      "mixinVersion": "0.8.7",
+      "mixinExtrasVersion": "0.4.1",
+      "baseline": "fabric-baseline-1.21.1"
+    },
+    {
+      "id": "fabric-ferrite-dev-1.21.1",
+      "artifacts": [
+        "W4lg2p7U"
+      ],
+      "loader": "fabric",
+      "loaderVersion": "0.16.14",
+      "minecraftVersion": "1.21.1",
+      "namespace": "unknown",
+      "mixinVersion": "0.8.7",
+      "mixinExtrasVersion": "0.4.1",
+      "notes": "Upstream primary file is -dev.jar; mixed named declarations and intermediary refmap/literal selectors. Unknown namespace keeps confidence conservative."
+    },
+    {
+      "id": "forge-1.20.1",
+      "artifacts": [
+        "QkyFrVSl"
+      ],
+      "loader": "forge",
+      "loaderVersion": "47.3.0",
+      "minecraftVersion": "1.20.1",
+      "namespace": "srg",
+      "mixinVersion": "unknown",
+      "mixinExtrasVersion": "unknown"
+    },
+    {
+      "id": "neoforge-1.21.1",
+      "artifacts": [
+        "CnpoQxCx"
+      ],
+      "loader": "neoforge",
+      "loaderVersion": "21.1.200",
+      "minecraftVersion": "1.21.1",
+      "namespace": "mojang",
+      "mixinVersion": "unknown",
+      "mixinExtrasVersion": "unknown"
+    },
+    {
+      "id": "quilt-1.20.1",
+      "artifacts": [
+        "s8dfz9Xa"
+      ],
+      "loader": "quilt",
+      "loaderVersion": "0.26.3",
+      "minecraftVersion": "1.20.1",
+      "namespace": "intermediary",
+      "mixinVersion": "unknown",
+      "mixinExtrasVersion": "unknown"
+    }
+  ],
+  "profileScope": "Declared analysis profiles, not verified installed loader selection. Includes unknown runtime versions and a mixed-namespace dev artifact."
+}

@@ -1,12 +1,19 @@
 package io.github.rs0325.mixinscope;
 
 import java.nio.file.*;
+import java.util.Map;
+import io.github.rs0325.mixinscope.core.Util;
 import static io.github.rs0325.mixinscope.Fixtures.*;
 
 /** Reproducible synthetic scale checks; generation is excluded from scan time. */
 public final class Benchmark {
     public static void main(String[] args) throws Exception {
         Path root=Path.of("build/benchmark");Files.createDirectories(root);
+        Files.writeString(root.resolve("environment.json"),Util.JSON.writerWithDefaultPrettyPrinter().writeValueAsString(Map.of(
+                "os",System.getProperty("os.name"),"osVersion",System.getProperty("os.version"),
+                "architecture",System.getProperty("os.arch"),"availableProcessors",Runtime.getRuntime().availableProcessors(),
+                "javaVersion",System.getProperty("java.version"),"javaVendor",System.getProperty("java.vendor"),
+                "maxHeapBytes",Runtime.getRuntime().maxMemory(),"scanBudgetMillis",30_000)));
         StringBuilder csv=new StringBuilder("artifacts,groups,findings,scan_ms,used_heap_mib,max_heap_mib,skipped_pairs\n");
         for(int count:new int[]{100,1000}) {
             Path dir=root.resolve(Integer.toString(count));

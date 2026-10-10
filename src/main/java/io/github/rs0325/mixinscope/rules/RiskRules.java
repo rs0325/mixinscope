@@ -82,6 +82,8 @@ public final class RiskRules {
         if (a.target.instructionsVerified && b.target.instructionsVerified)
             return !Collections.disjoint(new HashSet<>(a.target.instructions), new HashSet<>(b.target.instructions));
         if (a.modification.at.isEmpty() || b.modification.at.isEmpty()) return false;
+        // Matching slice IDs alone cannot establish matching boundaries in JAR-only mode.
+        if (!Objects.equals(a.modification.options.get("slice"), b.modification.options.get("slice"))) return false;
         for (Map<String, Object> x : a.modification.at) for (Map<String, Object> y : b.modification.at)
             if (normalizedAt(x).equals(normalizedAt(y))) return true;
         return false;

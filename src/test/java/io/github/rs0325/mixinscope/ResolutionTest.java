@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ResolutionTest {
     @TempDir Path directory;
+    private static byte[] json(Object value) throws java.io.IOException { return Util.JSON.writeValueAsBytes(value); }
     private Path redirect(String id,int ordinal) throws Exception { return mod(directory,id,new Method("Redirect","attack()V",Map.of("at",at("INVOKE","Lgame/Ops;hit()V",ordinal)))); }
     @Test void jarOnlyIdenticalRedirectCandidatesHaveMediumConfidence() throws Exception {
         Report report=scan(options(redirect("a",0),redirect("b",0)));
@@ -25,6 +26,14 @@ class ResolutionTest {
     @Test void sameCallAtDifferentInstructionsDoesNotBecomeRedirectCollision() throws Exception {
         ScanOptions o=options(redirect("a",0),redirect("b",1)); o.gameJar=game(directory); Report report=scan(o);
         assertFalse(rules(report).contains("MS003")); assertEquals(Set.of("MS001"),rules(report));
+    }
+    @Test void sameSliceIdWithDifferentBoundariesDoesNotEstablishJarOnlyRedirectCollision() throws Exception {
+        Map<String,Object> point=new TreeMap<>(at("INVOKE","Lgame/Ops;hit()V",0));point.put("slice","range");
+        Map<String,Object> first=Map.of("annotationType","Lorg/spongepowered/asm/mixin/injection/Slice;","id","range","from",at("HEAD"));
+        Map<String,Object> second=Map.of("annotationType","Lorg/spongepowered/asm/mixin/injection/Slice;","id","range","from",at("INVOKE","Lgame/Ops;hit()V",1));
+        Report report=scan(options(mod(directory,"a",new Method("Redirect","attack()V",Map.of("at",point,"slice",first))),
+                mod(directory,"b",new Method("Redirect","attack()V",Map.of("at",point,"slice",second)))));
+        assertEquals(Set.of("MS001"),rules(report));
     }
     @Test void ordinalAllIntersectsAnIndividualInstruction() throws Exception {
         ScanOptions o=options(redirect("a",-1),redirect("b",1)); o.gameJar=game(directory); assertTrue(rules(scan(o)).contains("MS003"));
@@ -89,7 +98,30 @@ class ResolutionTest {
     }
     @Test void remapFalsePreservesLiteralName() throws Exception {
         ScanOptions o=options(mod(directory,"a","net/minecraft/class_1","*",new Method("Inject","method_1()V",Map.of("remap",false))));o.namespace="intermediary";o.outputNamespace="named";o.mappings=mappings();
-        Target target=scan(o).modifications.getFirst().targets.getFirst();assertEquals("method_1",target.key.name());
+        Target target=scan(o).modifications.getFirst().targets.getFirst();assertEquals("method_1",target.key.name());assertEquals("intermediary",target.key.namespace());
+    }
+    @Test void refmapContextRemapsInjectionPointsAndSliceBoundariesWithoutChangingRawMetadata() throws Exception {
+        String raw="Lraw/Ops;rawHit()V", mapped="Lgame/Ops;hit()V";
+        Map<String,Object> slice=Map.of("annotationType","Lorg/spongepowered/asm/mixin/injection/Slice;","id","second","from",at("INVOKE",raw,1),"to",at("TAIL"));
+        Map<String,Object> point=new TreeMap<>(at("INVOKE",raw,0));point.put("slice","second");
+        Path file=jar(directory.resolve("refmap.jar"),Map.of("fabric.mod.json",json(Map.of("schemaVersion",1,"id","refmap","mixins",List.of("test.mixins.json"))),
+                "test.mixins.json",json(Map.of("package","example","mixins",List.of("TestMixin"),"refmap","test.refmap.json")),
+                "test.refmap.json",json(Map.of("mappings",Map.of("example/TestMixin",Map.of(raw,"Lwrong/Ops;wrong()V")),"data",Map.of("test-context",Map.of("example/TestMixin",Map.of(raw,mapped))))),
+                "example/TestMixin.class",mixin("game/Player",new Method("Redirect","attack()V",Map.of("at",point,"slice",slice)))));
+        ScanOptions o=options(file);o.gameJar=game(directory);o.refmapContext="test-context";
+        Report report=scan(o);Modification m=report.modifications.getFirst();assertEquals(raw,m.at.getFirst().get("target"));
+        assertEquals(List.of(1),m.targets.getFirst().instructions);assertTrue(m.targets.getFirst().instructionsVerified);
+        o.refmapContext=null;Report fallback=scan(o);assertTrue(diagnostic(fallback,"INJECTION_POINT_UNSUPPORTED"));
+    }
+    @Test void atRemapFalseBypassesRefmapAndEmptyPointsRemainVisibleWithRequireZero() throws Exception {
+        String raw="Lraw/Ops;rawHit()V";Map<String,Object> point=new TreeMap<>(at("INVOKE",raw,0));point.put("remap",false);
+        Path file=jar(directory.resolve("literal.jar"),Map.of("fabric.mod.json",json(Map.of("schemaVersion",1,"id","literal","mixins",List.of("test.mixins.json"))),
+                "test.mixins.json",json(Map.of("package","example","mixins",List.of("TestMixin"),"refmap","test.refmap.json")),
+                "test.refmap.json",json(Map.of("mappings",Map.of("example/TestMixin",Map.of(raw,"Lgame/Ops;hit()V")))),
+                "example/TestMixin.class",mixin("game/Player",new Method("Redirect","attack()V",Map.of("at",point,"require",0)))));
+        ScanOptions o=options(file);o.gameJar=game(directory);Report report=scan(o);
+        assertTrue(report.modifications.getFirst().targets.getFirst().instructions.isEmpty());assertTrue(diagnostic(report,"INJECTION_POINT_NO_MATCH"));
+        assertFalse(diagnostic(report,"INJECTION_COUNT_CANDIDATE"));
     }
     @Test void sliceAndShiftRestrictInstructionMatches() throws Exception {
         Map<String,Object> slice=Map.of("annotationType","Lorg/spongepowered/asm/mixin/injection/Slice;","id","second","from",at("INVOKE","Lgame/Ops;hit()V",1),"to",at("TAIL"));

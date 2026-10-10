@@ -47,3 +47,4 @@ jobs:
             build/reports/tests/test/**
             build/demo/report.*
             build/benchmark/results.csv
+            build/benchmark/environment.json

@@ -36,6 +36,8 @@ Mixin defaults の参考は [Sponge Mixin 0.8.7](https://github.com/SpongePowere
 
 実 Mod は class/resource 数が大きく、合成 fixture の速度とメモリ使用を一般化しない。archive limit は大きな pack に合わせて利用者が調整する。
 
+`build/benchmark/environment.json` に OS・CPU architecture・利用可能 processor 数・Java 版・最大 heap と時間予算を保存し、CSV と一緒に比較する。
+
 ## リリース前の目視確認
 
 `./gradlew demo` 後に `build/demo/report.html` をブラウザで開き、狭い画面・キーボード Tab 操作・検索・フィルタ・target graph・suppressed findings・長い Mod 名を確認する。DOM 自動テストだけでは外観確認の完了としない。

@@ -57,6 +57,13 @@ class ArchiveLoaderTest {
     @Test void unknownInjectorIsNotSilentlyIgnored() throws Exception {
         Report report=scan(options(mod(directory,"a",new Method("CustomInjector","attack()V"))));assertTrue(diagnostic(report,"ANNOTATION_UNSUPPORTED"));
     }
+    @Test void unknownArtifactAndRegistrationSidesRemainUnknown() throws Exception {
+        Report artifact=scan(options(mod(directory,"a","game/Player","unexpected",new Method("Inject","attack()V"))));
+        assertEquals(Applicability.UNKNOWN,artifact.modifications.getFirst().applicability);assertTrue(diagnostic(artifact,"SIDE_UNKNOWN"));
+        Path file=customMod(directory,"b",Map.of("schemaVersion",1,"id","b","mixins",List.of(Map.of("config","test.mixins.json","environment","unexpected"))),
+                Map.of("package","example","mixins",List.of("TestMixin")),"game/Player",new Method("Inject","attack()V"));
+        assertEquals(Applicability.UNKNOWN,scan(options(file)).modifications.getFirst().applicability);
+    }
     @Test void brokenZipAndMalformedJsonArePartial() throws Exception {
         Path bad=directory.resolve("bad.jar");Files.writeString(bad,"not a zip");assertTrue(scan(options(bad)).coverage.partial);
         Path malformed=jar(directory.resolve("malformed.jar"),Map.of("fabric.mod.json",bytes("{bad}")));assertTrue(diagnostic(scan(options(malformed)),"METADATA_ERROR"));

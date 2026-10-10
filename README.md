@@ -52,6 +52,8 @@ Refmap の default mappings を読み、必要なら `--refmap-context <name>` �
 
 同じメソッド内に同じ呼出し先が複数あっても、ordinal・slice が異なる命令を指す場合は同一命令の衝突と区別します。参照 JAR は他 Mod の変換前の状態なので、Mixin の全適用パスや実行結果を再現したという意味ではありません。
 
+Refmap は注入先メソッドと `@At target`、slice の境界にも適用し、元の annotation は保持します。注入点側の `remap=false` はその参照の変換を抑止します。元 bytecode で一致する注入点がない場合は、`require=0` でも診断に残します。
+
 ### 抑制と baseline
 
 ```json

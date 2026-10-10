@@ -33,7 +33,7 @@ public final class Discovery {
                 Map<String, Object> metadata = Util.map(q.get("metadata"));
                 addMod(a, q, metadata); a.metadata.put("loaderMetadata", root);
                 side = declaredSide(Util.map(root.get("minecraft")).get("environment"), a);
-                register(registrations, root.get("mixin"), side, List.of());
+                register(a, registrations, root.get("mixin"), side, List.of());
                 nested.addAll(Util.strings(q.get("jars")));
                 for (String path : Util.strings(root.get("access_widener"))) transformer(a, "ACCESS_CONTROL", path);
                 if (q.containsKey("plugins")) transformer(a, "DYNAMIC_BOOTSTRAP", "quilt.mod.json:quilt_loader.plugins");
@@ -43,7 +43,7 @@ public final class Discovery {
                 if (Util.integer(root.get("schemaVersion"), -1) != 1) unsupported(a, "Unknown Fabric metadata schema");
                 addMod(a, root, root); a.metadata.put("loaderMetadata", root);
                 side = declaredSide(root.get("environment"), a);
-                register(registrations, root.get("mixins"), side, List.of());
+                register(a, registrations, root.get("mixins"), side, List.of());
                 for (Object value : Util.list(root.get("jars"))) {
                     String file = Util.str(Util.map(value).get("file"), "");
                     if (!file.isEmpty()) nested.add(file);
@@ -124,13 +124,13 @@ public final class Discovery {
     private record Registration(String path, Set<String> sides, List<String> required, String behavior) {
         Registration(String path, Set<String> sides, List<String> required) { this(path, sides, required, ""); }
     }
-    private void register(List<Registration> result, Object values, Set<String> sides, List<String> required) {
+    private void register(Artifact a, List<Registration> result, Object values, Set<String> sides, List<String> required) {
         for (Object value : Util.list(values)) {
             if (value instanceof String s) result.add(new Registration(s, sides, required));
             else {
                 Map<String, Object> m = Util.map(value);
                 Set<String> applicable = new TreeSet<>(sides);
-                applicable.retainAll(declaredSide(m.get("environment"), null));
+                applicable.retainAll(declaredSide(m.get("environment"), a));
                 result.add(new Registration(Util.str(m.get("config"), ""), applicable, required));
             }
         }
@@ -146,7 +146,7 @@ public final class Discovery {
         c.registration.put("requiredMods", reg.required); c.registration.put("behaviorVersion", reg.behavior);
         if (c.sides.isEmpty()) c.applicability = Applicability.INELIGIBLE;
         else if (!c.plugin.isEmpty() || a.nested) c.applicability = Applicability.CONDITIONAL;
-        if ((a.partial || Boolean.TRUE.equals(a.metadata.get("schemaUnknown"))) && c.applicability != Applicability.INELIGIBLE) c.applicability = Applicability.UNKNOWN;
+        if ((a.partial || Boolean.TRUE.equals(a.metadata.get("schemaUnknown")) || Boolean.TRUE.equals(a.metadata.get("sideUnknown"))) && c.applicability != Applicability.INELIGIBLE) c.applicability = Applicability.UNKNOWN;
         if ((!reg.required.isEmpty() || !reg.behavior.isEmpty()) && !options.metadataProfile.equals("fml-12.0")) {
             c.applicability = c.sides.isEmpty() ? Applicability.INELIGIBLE : Applicability.UNKNOWN;
             report.diagnostic("METADATA_CONDITION_PROFILE_UNKNOWN", c.path, "New FML mixin attributes require explicit --metadata-profile fml-12.0; they are not applied to older profiles", false);
@@ -194,6 +194,7 @@ public final class Discovery {
         String s = Util.str(value, "*");
         if (s.equals("dedicated_server")) s = "server";
         if (!Set.of("*", "both", "client", "server").contains(s)) {
+            if (a != null) a.metadata.put("sideUnknown", true);
             report.diagnostic("SIDE_UNKNOWN", a == null ? "registration" : a.hash, "Unknown side value " + s, false);
         }
         return Util.sides(s);

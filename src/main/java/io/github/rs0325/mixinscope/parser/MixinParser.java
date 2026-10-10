@@ -31,6 +31,9 @@ public final class MixinParser {
                     if (bytes == null) { report.diagnostic("MIXIN_CLASS_MISSING", artifact.hash + "!/" + path, "Registered mixin class missing", true); continue; }
                     try {
                         ClassNode node = classNode(bytes, false);
+                        if (!node.name.equals(Util.owner(className))) {
+                            report.diagnostic("CLASS_NAME_MISMATCH", path, "Declared class path differs from class-file internal name", true); continue;
+                        }
                         AnnotationNode mixin = annotations(node.visibleAnnotations, node.invisibleAnnotations).stream()
                                 .filter(a -> a.desc.equals(MIXIN)).findFirst().orElse(null);
                         if (mixin == null) { report.diagnostic("MIXIN_ANNOTATION_MISSING", className, "Registered class lacks @Mixin", false); continue; }

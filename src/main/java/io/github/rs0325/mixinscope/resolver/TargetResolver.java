@@ -64,7 +64,7 @@ public final class TargetResolver {
                             target.key = key(artifacts.get(m.artifact).loader, targetNamespace, match.owner(), match.method().name, match.method().desc);
                             target.resolution = Resolution.RESOLVED; target.existence = Existence.VERIFIED; target.bytecodeHash = match.hash();
                             target.limitation = "Reference bytecode precedes other transformers; runtime application is unverified.";
-                            InstructionMatcher.resolve(match.method(), m, target, mappings, report);
+                            InstructionMatcher.resolve(match.method(), m, target, mappings, rawReference -> reference(config, m, rawReference), report);
                         } else if (matches.size() > 1) target.resolution = Resolution.AMBIGUOUS;
                         else if (classes.contains(resolvedOwner) && classes.hierarchyComplete(resolvedOwner)) {
                             target.existence = Existence.MISSING; target.resolution = Resolution.UNRESOLVED;

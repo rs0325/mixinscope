@@ -5,11 +5,12 @@ import io.github.rs0325.mixinscope.model.Model.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 /** Conservative matching on original bytecode; unsupported points never become verified. */
 public final class InstructionMatcher {
     private InstructionMatcher() {}
-    public static void resolve(MethodNode method, Modification modification, Target target, TinyMappings mappings, Report report) {
+    public static void resolve(MethodNode method, Modification modification, Target target, TinyMappings mappings, UnaryOperator<String> references, Report report) {
         List<AbstractInsnNode> code = new ArrayList<>();
         for (AbstractInsnNode instruction : method.instructions) if (instruction.getOpcode() >= 0) code.add(instruction);
         if (code.isEmpty()) { report.diagnostic("REFERENCE_BODY_UNAVAILABLE", modification.id, "Method has no reference instruction body", false); return; }
@@ -24,13 +25,15 @@ public final class InstructionMatcher {
                 Map<String, Object> slice = slices.stream().filter(s -> Util.str(s.get("id"), "").equals(sliceId)).findFirst().orElse(Map.of());
                 if (!sliceId.isEmpty() && slice.isEmpty()) throw new IllegalArgumentException("Unknown slice: " + sliceId);
                 if (!slice.isEmpty()) {
-                    low = boundary(Util.map(slice.get("from")), code, 0, modification, mappings);
-                    high = boundary(Util.map(slice.get("to")), code, code.size() - 1, modification, mappings);
+                    low = boundary(Util.map(slice.get("from")), code, 0, modification, mappings, references);
+                    high = boundary(Util.map(slice.get("to")), code, code.size() - 1, modification, mappings, references);
                     if (low > high) throw new IllegalArgumentException("Invalid slice boundaries");
                 }
-                for (int index : point(at, code, low, high, modification, mappings)) matches.add(index);
+                for (int index : point(at, code, low, high, modification, mappings, references)) matches.add(index);
             }
             target.instructions = new ArrayList<>(matches); target.instructionsVerified = true;
+            if (matches.isEmpty()) report.diagnostic("INJECTION_POINT_NO_MATCH", modification.id,
+                    "No matching injection instruction in the original reference bytecode; runtime application is unverified", false);
             int require = Util.integer(modification.defaults.get("require"), 0), allow = Util.integer(modification.options.get("allow"), -1);
             if (matches.size() < require || allow >= Math.max(1, require) && matches.size() > allow)
                 report.diagnostic("INJECTION_COUNT_CANDIDATE", modification.id,
@@ -42,16 +45,17 @@ public final class InstructionMatcher {
             report.diagnostic("INJECTION_POINT_UNSUPPORTED", modification.id, ex.getMessage(), false);
         }
     }
-    private static int boundary(Map<String, Object> at, List<AbstractInsnNode> code, int fallback, Modification m, TinyMappings mappings) {
+    private static int boundary(Map<String, Object> at, List<AbstractInsnNode> code, int fallback, Modification m, TinyMappings mappings, UnaryOperator<String> references) {
         if (at.isEmpty()) return fallback;
-        List<Integer> result = point(at, code, 0, code.size() - 1, m, mappings);
+        List<Integer> result = point(at, code, 0, code.size() - 1, m, mappings, references);
         if (result.size() != 1) throw new IllegalArgumentException("Slice boundary is not unique");
         return result.getFirst();
     }
-    private static List<Integer> point(Map<String, Object> at, List<AbstractInsnNode> code, int low, int high, Modification m, TinyMappings mappings) {
+    private static List<Integer> point(Map<String, Object> at, List<AbstractInsnNode> code, int low, int high, Modification m, TinyMappings mappings, UnaryOperator<String> references) {
         String kind = Util.str(at.get("value"), "");
         if (!Util.list(at.get("args")).isEmpty()) throw new IllegalArgumentException("Injection-point args are not supported: " + kind);
         String rawTarget = Util.str(at.get("target"), "");
+        if (Util.bool(m.options.get("remap"), true) && Util.bool(at.get("remap"), true)) rawTarget = references.apply(rawTarget);
         boolean remap = mappings != null && Util.bool(m.options.get("remap"), true) && Util.bool(at.get("remap"), true);
         int opcode = Util.integer(at.get("opcode"), -1);
         List<Integer> matches = new ArrayList<>();

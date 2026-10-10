@@ -151,7 +151,7 @@ public final class Reports {
             card.append(mods,el('p',f.reason));const b=el('button','Inspect target');b.type='button';b.setAttribute('aria-label','Inspect target '+label(f.target));b.addEventListener('click',()=>inspect(key(f.target)));card.append(b);
             const details=el('details');details.append(el('summary','Evidence, assumptions and limitations'),el('pre',JSON.stringify({id:f.id,modifications:f.modifications.map(id=>byId.get(id)),scenarios:f.scenarios,evidence:f.evidence,limitations:f.limitations,suppression:f.suppressionReason},null,2)));card.append(details);get('findings').append(card);
           }
-          get('more').hidden=items.length<=limit;if(get('more').hidden&&document.activeElement===get('more'))get('count').focus();get('graph').replaceChildren();
+          const more=get('more'),moreFocused=document.activeElement===more;more.hidden=items.length<=limit;if(more.hidden&&moreFocused)get('count').focus();get('graph').replaceChildren();
           if(target){
             const ms=report.modifications.filter(m=>m.targets.some(t=>t.key&&key(t.key)===target||t.candidateKeys.some(k=>key(k)===target)));
             get('graph').append(el('h3',label(targets.get(target))),el('p',ms.length+' modifications; '+Math.min(200,ms.length)+' shown'));

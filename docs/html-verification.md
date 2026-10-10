@@ -4,7 +4,9 @@
 
 Filters / Findings / Inventoryへの移動リンクを追加した。253 findingがあってもすべてのカードをTabで通過せず主要箇所へ移れる。移動先をfocusし、Inventoryへの移動ではdetailsを開く。カード内の対象・Modボタンには対象名を含むaccessible nameを付けた。
 
-長い対象・Mod名の折返し、controlの最大幅、600px以下のfilter縦配置を追加。実Chromeの320px表示でfilterのGrid列がcontrolの最小幅に引っ張られ、本文より横に広がる問題を発見した。列を`minmax(0,1fr)`とし、label / controlに`min-width:0`を設定。修正後の通常レポートを320 / 375 / 768pxで確認し直した。長い名前fixtureの実画面はまだ確認していない。
+長い対象・Mod名の折返し、controlの最大幅、600px以下のfilter縦配置を追加。実Chromeの320px表示でfilterのGrid列がcontrolの最小幅に引っ張られ、本文より横に広がる問題を発見した。列を`minmax(0,1fr)`とし、label / controlに`min-width:0`を設定。修正後の通常・長い名前レポートを320 / 375 / 768pxで確認し直した。
+
+実Chromeで253件まで追加表示した際、最後のボタンをhiddenにしてからactiveElementを調べると、すでにfocusが失われていた。非表示にする前にfocus状態を記録し、最後の追加後は件数表示へfocusを戻す。JSDOMではhiddenにしてもfocusが残るため、観測したblurを再現するテスト用setterで回帰を検証する。この補助はnativeブラウザ全体の再現ではない。
 
 DOMテストはリンク起動後のfocus、最後のページで消えるShow moreから件数表示へのfocus、Modボタンからfilterへのfocus、native label、finding ID / 件数、253件のページング、200 graph entries、長い文字列と空レポート、script文字列の非実行を検証する。JSDOMはブラウザのTab / Enter / Space動作やレイアウトを再現しない。
 
@@ -46,5 +48,8 @@ DOMテストはリンク起動後のfocus、最後のページで消えるShow m
 | 詳細 | Evidence、Inventory、coverage、suppression / baselineのsummaryをSpace / Enterで開閉。キーボードfocus枠と、展開した内容を確認 |
 | JSONとの照合 | MS001は`148658ca8facb8fd2e18797ec47e9f9e93f6072b0148a6786c046274a8d93bf0`、MS002は`896755e70bc1a991b377692aaa0e82b9451ba45fd12d791e3c2bca36ec29e560`。実画面のEvidenceのIDが隣のreport.jsonと一致。件数2 / summary 1も一致 |
 | Console | 最初にChrome翻訳関連のinvalid URL / CSP拒否等が見えた。修正後のreloadではConsoleにNo errors / No issues。ブラウザの翻訳機能を無効化せず、レポートのCSPも変更していない |
+| 長い名前レポート | ユーザーが開いた追加タブ。通常幅とResponsive 320 / 375 / 768 CSS px、200% zoomで長い対象見出し・Modボタンが折り返されることを確認。320pxでTab→長いModボタンのfocus枠、SpaceでEvidenceを開閉。200%でModボタンのEnter→Mod selectへfocusを確認。selectで省略される全名はカード見出し・ボタンから読める。2 finding / summary 1、MS001 / MS002のIDは通常レポートと同じでlong-label-report.jsonとも一致 |
+| 253件レポート | 通常幅 / zoom 100%。Show moreをSpaceで100→200→253件。修正後は最後にボタンが消え、件数表示へfocusが戻り枠が見える。Include suppressedのSpaceで250 / 253、ResetのEnterで253 / 253へ復帰。attack profile選択で252 / 253、graphに207 modifications; 200 shown。historyのstress-0 / 1 / 2にStress control。Evidenceでstress-99 / stress-252を標本確認。全253件のIDと順序は埋込みJSONとのDOM照合で検証し、全Evidenceの手動照合とは扱わない |
+| 空レポート | 通常幅 / zoom 100%。0 matching / 0 total、summary 0、Show moreなし。Tab / EnterでFindingsの件数へfocus、次のTab / SpaceでInventoryを開いて案内を表示。空の埋込みJSONと件数一致 |
 
-通常レポートの実画面とキーボード確認は実施済み。長い名前・253件・空レポートは、ユーザーに追加タブで開くよう依頼し準備待ち。これらのDOM検証を実画面確認の代わりに完了扱いしない。Issue #17の包括的な目視・キーボード受入項目は未チェックを維持する。他ブラウザ、screen reader、実モバイル端末の検証は行っていない。
+通常・長い名前・253件・空レポートの実Chrome確認を上記の範囲で完了。Issue #17の件数 / ID整合性と主要機能のキーボード操作の受入項目を、この実画面検証とDOM照合を根拠にチェックする。他ブラウザ、screen reader、実モバイル端末は未検証。253件 / 空レポートで全viewportとzoomの組合せを網羅したものではない。Issue open / PR draftを維持し、mainへのmergeやreleaseは行わない。

@@ -71,10 +71,21 @@ const articles = () => stress.window.document.querySelectorAll('article');
 assert.equal(articles().length, 100);
 assert.equal(sget('groups').querySelectorAll('section').length, 2);
 assert.equal([...sget('target').options].filter(o => o.textContent.startsWith('game/Player.attack()V')).length, 2);
+// Native Chrome clears focus when a focused button is hidden; JSDOM retains it.
+// Reproduce that observed behavior so focus restoration cannot inspect too late.
+const hidden = Object.getOwnPropertyDescriptor(stress.window.HTMLElement.prototype, 'hidden');
+Object.defineProperty(sget('more'), 'hidden', {
+  get() { return hidden.get.call(this); },
+  set(value) {
+    hidden.set.call(this, value);
+    if (value && stress.window.document.activeElement === this) this.blur();
+  }
+});
 sget('more').focus(); sget('more').click();assert.equal(articles().length, 200);assert.equal(sget('more').hidden, false);
 assert.equal(stress.window.document.activeElement,sget('more'));
 sget('more').click();assert.equal(articles().length, 253);assert.equal(sget('more').hidden, true);
 assert.equal(stress.window.document.activeElement,sget('count'));
+assert.deepEqual([...articles()].map(a=>a.dataset.findingId),JSON.parse(sget('report').textContent).findings.map(f=>f.id));
 schange('risk', 'HIGH');assert.equal(articles().length,100);assert.equal(sget('more').hidden,false);
 sget('suppressed').checked=false;sget('suppressed').dispatchEvent(new stress.window.Event('input',{bubbles:true}));assert.match(sget('count').textContent,/250 matching/);
 sget('filters').reset();await new Promise(resolve=>stress.window.setTimeout(resolve,10));assert.equal(sget('risk').value,'');assert.equal(sget('suppressed').checked,true);assert.equal(articles().length,100);

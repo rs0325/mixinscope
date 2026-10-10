@@ -28,3 +28,5 @@
 160件のJava回帰テスト、14ケースの自作runtime対照、8レポートのJSON Schema検証、HTML DOM検証、固定実Mod6ケースの静的解析、配布物生成がローカルで成功。3 OS CIの結果はdraft PR #18の最新検証欄に記録する。コマンドと観測結果は[validation.md](validation.md)、[real-mods-results.json](real-mods-results.json)、draft PR #18の検証欄を参照。
 
 レビューで見つけた上記の問題は修正済み。その後の実Chrome確認で通常・長い名前・253件・空レポートの目視・キーボード操作を検証し、320px幅でfilterが横へ広がる問題と、最終ページで追加表示ボタンが消える際のfocus喪失を修正した。確認した幅・倍率・操作と未検証範囲は[html-verification.md](html-verification.md)。実Modpackのfalse positives / false negatives、他runtime版、完全なloader依存選択と任意transformerの効果は既知の未検証範囲として維持する。レビュー記録はmainへのマージやリリース承認を意味しない。
+
+静的判定と自作runtime14ケースを機械的に照合する検証を追加し、固定実Mod6レポートの分類内訳とFabricのMod間HIGH全3件の宣言をJDK javap / config / refmapで確認した。[評価記録](evidence-evaluation.md)を参照。実Minecraftのground truthがないためprecision / recallは未算出。

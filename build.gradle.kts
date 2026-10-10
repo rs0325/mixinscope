@@ -43,6 +43,7 @@ tasks.test {
     useJUnitPlatform(); maxHeapSize = "512m"
     dependsOn(runtimeFixture.classesTaskName)
     systemProperty("mixinscope.fixtureClasses", runtimeFixture.output.classesDirs.asPath)
+    outputs.dir(layout.buildDirectory.dir("runtime-fixture/static"))
 }
 tasks.withType<JavaCompile> { options.encoding = "UTF-8"; options.release.set(21) }
 tasks.withType<AbstractArchiveTask> { isPreserveFileTimestamps = false; isReproducibleFileOrder = true }

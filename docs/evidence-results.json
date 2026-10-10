@@ -1,0 +1,555 @@
+{
+  "scope": "Authored controls plus optional static declaration review; no Minecraft or downloaded mod/plugin execution",
+  "metrics": {
+    "precision": null,
+    "recall": null,
+    "reason": "No representative Minecraft runtime ground truth. Risk is not a binary crash prediction."
+  },
+  "authoredControls": {
+    "profile": {
+      "mixin": "0.15.5+mixin.0.8.7",
+      "mixinExtras": "0.4.1"
+    },
+    "matchedCases": 14,
+    "cases": [
+      {
+        "case": "ArgumentCalculator",
+        "rules": [
+          "MS001",
+          "MS006"
+        ],
+        "findings": [
+          {
+            "rule": "MS001",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          },
+          {
+            "rule": "MS006",
+            "severity": "MEDIUM",
+            "confidence": "HIGH"
+          }
+        ],
+        "diagnostics": [],
+        "observed": {
+          "originalCalls": 1,
+          "result": 14
+        },
+        "matched": true
+      },
+      {
+        "case": "BypassCalculator",
+        "rules": [
+          "MS001",
+          "MS007"
+        ],
+        "findings": [
+          {
+            "rule": "MS001",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          },
+          {
+            "rule": "MS007",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          }
+        ],
+        "diagnostics": [
+          "WRAPPER_CALL_UNVERIFIED"
+        ],
+        "observed": {
+          "originalCalls": 0,
+          "result": 101
+        },
+        "matched": true
+      },
+      {
+        "case": "ChainCalculator",
+        "rules": [
+          "MS001",
+          "MS007"
+        ],
+        "findings": [
+          {
+            "rule": "MS001",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          },
+          {
+            "rule": "MS007",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          }
+        ],
+        "diagnostics": [],
+        "observed": {
+          "originalCalls": 1,
+          "result": 9
+        },
+        "matched": true
+      },
+      {
+        "case": "DelegatedCalculator",
+        "rules": [],
+        "findings": [],
+        "diagnostics": [
+          "WRAPPER_CALL_UNVERIFIED"
+        ],
+        "observed": {
+          "originalCalls": 1,
+          "result": 7
+        },
+        "matched": true
+      },
+      {
+        "case": "ExplicitOwnerCalculator",
+        "rules": [],
+        "findings": [],
+        "diagnostics": [
+          "SELECTOR_UNSUPPORTED"
+        ],
+        "observed": {
+          "expectedFailure": "org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException"
+        },
+        "matched": true
+      },
+      {
+        "case": "InitializerCalculator",
+        "rules": [],
+        "findings": [],
+        "diagnostics": [
+          "MIXIN_INITIALIZER_UNANALYZED"
+        ],
+        "observed": {
+          "mixinInstanceSeed": 7,
+          "mixinStaticSeed": 5,
+          "targetSeed": 3
+        },
+        "matched": true
+      },
+      {
+        "case": "MethodCalculator",
+        "rules": [
+          "MS001",
+          "MS007"
+        ],
+        "findings": [
+          {
+            "rule": "MS001",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          },
+          {
+            "rule": "MS007",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          }
+        ],
+        "diagnostics": [],
+        "observed": {
+          "originalCalls": 1,
+          "result": 9
+        },
+        "matched": true
+      },
+      {
+        "case": "OptionalInheritedChild",
+        "rules": [],
+        "findings": [],
+        "diagnostics": [
+          "TARGET_INHERITED_NOT_LOCAL",
+          "TARGET_UNRESOLVED"
+        ],
+        "observed": {
+          "callbacks": 0,
+          "result": 6
+        },
+        "matched": true
+      },
+      {
+        "case": "OverwriteCalculator",
+        "rules": [
+          "MS001",
+          "MS002"
+        ],
+        "findings": [
+          {
+            "rule": "MS001",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          },
+          {
+            "rule": "MS002",
+            "severity": "HIGH",
+            "confidence": "HIGH"
+          }
+        ],
+        "diagnostics": [],
+        "observed": {
+          "originalCalls": 0,
+          "result": 11
+        },
+        "matched": true
+      },
+      {
+        "case": "OverwriteInheritedChild",
+        "rules": [],
+        "findings": [],
+        "diagnostics": [
+          "TARGET_INHERITED_NOT_LOCAL",
+          "TARGET_UNRESOLVED"
+        ],
+        "observed": {
+          "expectedFailure": "org.spongepowered.asm.mixin.transformer.throwables.InvalidMixinException"
+        },
+        "matched": true
+      },
+      {
+        "case": "OwnedOverrideChild",
+        "rules": [],
+        "findings": [],
+        "diagnostics": [],
+        "observed": {
+          "callbacks": 1,
+          "result": 9
+        },
+        "matched": true
+      },
+      {
+        "case": "RedirectCalculator",
+        "rules": [
+          "MS001",
+          "MS003"
+        ],
+        "findings": [
+          {
+            "rule": "MS001",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          },
+          {
+            "rule": "MS003",
+            "severity": "HIGH",
+            "confidence": "HIGH"
+          }
+        ],
+        "diagnostics": [],
+        "observed": {
+          "expectedFailure": "org.spongepowered.asm.mixin.injection.throwables.InjectionError"
+        },
+        "matched": true
+      },
+      {
+        "case": "RequiredInheritedChild",
+        "rules": [],
+        "findings": [],
+        "diagnostics": [
+          "TARGET_INHERITED_NOT_LOCAL",
+          "TARGET_UNRESOLVED"
+        ],
+        "observed": {
+          "expectedFailure": "org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException"
+        },
+        "matched": true
+      },
+      {
+        "case": "SafeCalculator",
+        "rules": [
+          "MS001"
+        ],
+        "findings": [
+          {
+            "rule": "MS001",
+            "severity": "LOW",
+            "confidence": "HIGH"
+          }
+        ],
+        "diagnostics": [],
+        "observed": {
+          "callbacks": 2,
+          "originalCalls": 1,
+          "result": 6
+        },
+        "matched": true
+      }
+    ]
+  },
+  "realCorpus": {
+    "manifestSha256": "0e03f09f2fd4c8500a8aa253c3d35f2c10d02e15007eeb6659d9c4e8a42db1b7",
+    "packs": [
+      {
+        "pack": "fabric-baseline-1.21.1",
+        "findings": 269,
+        "dimensions": {
+          "rule": {
+            "MS001": 230,
+            "MS002": 1,
+            "MS004": 4,
+            "MS005": 27,
+            "MS006": 2,
+            "MS007": 4,
+            "MS008": 1
+          },
+          "severity": {
+            "HIGH": 5,
+            "LOW": 234,
+            "MEDIUM": 30
+          },
+          "confidence": {
+            "LOW": 269
+          },
+          "category": {
+            "BETWEEN_MODS": 45,
+            "WITHIN_ARTIFACT": 224
+          }
+        },
+        "runtimeGroundTruth": "UNAVAILABLE"
+      },
+      {
+        "pack": "fabric-1.21.1",
+        "findings": 269,
+        "dimensions": {
+          "rule": {
+            "MS001": 230,
+            "MS002": 1,
+            "MS004": 4,
+            "MS005": 27,
+            "MS006": 2,
+            "MS007": 4,
+            "MS008": 1
+          },
+          "severity": {
+            "HIGH": 5,
+            "LOW": 234,
+            "MEDIUM": 30
+          },
+          "confidence": {
+            "LOW": 269
+          },
+          "category": {
+            "BETWEEN_MODS": 45,
+            "WITHIN_ARTIFACT": 224
+          }
+        },
+        "runtimeGroundTruth": "UNAVAILABLE"
+      },
+      {
+        "pack": "fabric-ferrite-dev-1.21.1",
+        "findings": 4,
+        "dimensions": {
+          "rule": {
+            "MS001": 4
+          },
+          "severity": {
+            "LOW": 4
+          },
+          "confidence": {
+            "LOW": 4
+          },
+          "category": {
+            "WITHIN_ARTIFACT": 4
+          }
+        },
+        "runtimeGroundTruth": "UNAVAILABLE"
+      },
+      {
+        "pack": "forge-1.20.1",
+        "findings": 92,
+        "dimensions": {
+          "rule": {
+            "MS001": 86,
+            "MS005": 5,
+            "MS007": 1
+          },
+          "severity": {
+            "LOW": 87,
+            "MEDIUM": 5
+          },
+          "confidence": {
+            "LOW": 92
+          },
+          "category": {
+            "WITHIN_ARTIFACT": 92
+          }
+        },
+        "runtimeGroundTruth": "UNAVAILABLE"
+      },
+      {
+        "pack": "neoforge-1.21.1",
+        "findings": 5,
+        "dimensions": {
+          "rule": {
+            "MS001": 5
+          },
+          "severity": {
+            "LOW": 5
+          },
+          "confidence": {
+            "LOW": 5
+          },
+          "category": {
+            "WITHIN_ARTIFACT": 5
+          }
+        },
+        "runtimeGroundTruth": "UNAVAILABLE"
+      },
+      {
+        "pack": "quilt-1.20.1",
+        "findings": 377,
+        "dimensions": {
+          "rule": {
+            "MS001": 320,
+            "MS005": 55,
+            "MS006": 1,
+            "MS007": 1
+          },
+          "severity": {
+            "LOW": 321,
+            "MEDIUM": 56
+          },
+          "confidence": {
+            "LOW": 377
+          },
+          "category": {
+            "BETWEEN_MODS": 109,
+            "WITHIN_ARTIFACT": 268
+          }
+        },
+        "runtimeGroundTruth": "UNAVAILABLE"
+      }
+    ],
+    "reviewSelection": "All three HIGH BETWEEN_MODS findings in fabric-1.21.1; not a random sample",
+    "declarationReviews": [
+      {
+        "findingId": "215e68080e020bc60185922c3d2e110986f99d59af3c9e28f9b3f18010887b3c",
+        "rule": "MS004",
+        "target": {
+          "descriptor": "()Lnet/minecraft/class_2487;",
+          "gameVersion": "1.21.1",
+          "loaderProfile": "fabric:0.16.14",
+          "name": "method_10553",
+          "namespace": "intermediary",
+          "owner": "net/minecraft/class_2487"
+        },
+        "members": [
+          {
+            "artifactSha256": "86b8b4a7e6cb2a24e2ef618343ebf8efa05dced0b43decb042130f431c6786aa",
+            "classSha256": "5f464b969eee95754465769c320e0e9ac2547d8581ef64889eb622b7698d0220",
+            "mixin": "org.embeddedt.modernfix.common.mixin.perf.nbt_memory_usage.CompoundTagMixin",
+            "handler": "copyEfficient",
+            "descriptor": "(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V",
+            "kind": "Inject",
+            "selector": [
+              "copy()Lnet/minecraft/nbt/CompoundTag;"
+            ],
+            "refmapValue": "Lnet/minecraft/class_2487;method_10553()Lnet/minecraft/class_2487;",
+            "plugin": "org.embeddedt.modernfix.core.ModernFixMixinPlugin",
+            "declarationMatched": true
+          },
+          {
+            "artifactSha256": "1f4385a8ee2c04e46fdacdfa3f751d17f53d1f4c2332f88942308e6dc2b694f6",
+            "classSha256": "8e1a00c71a4060ec3bdc20a4e2355f3143681cfe87dda8e0f107c7b7e8045dbd",
+            "mixin": "me.jellysquid.mods.lithium.mixin.alloc.nbt.NbtCompoundMixin",
+            "handler": "method_10553",
+            "descriptor": "()Lnet/minecraft/class_2487;",
+            "kind": "Overwrite",
+            "selector": [
+              "method_10553()Lnet/minecraft/class_2487;"
+            ],
+            "refmapValue": null,
+            "plugin": "me.jellysquid.mods.lithium.mixin.LithiumMixinPlugin",
+            "declarationMatched": true
+          }
+        ],
+        "runtimeGroundTruth": "UNAVAILABLE"
+      },
+      {
+        "findingId": "926b470667b34d173d6603dbb95b5308f32e959663f8171209f069fc7392977a",
+        "rule": "MS002",
+        "target": {
+          "descriptor": "(Lnet/minecraft/class_2338;)F",
+          "gameVersion": "1.21.1",
+          "loaderProfile": "fabric:0.16.14",
+          "name": "method_21740",
+          "namespace": "intermediary",
+          "owner": "net/minecraft/class_1959"
+        },
+        "members": [
+          {
+            "artifactSha256": "1f4385a8ee2c04e46fdacdfa3f751d17f53d1f4c2332f88942308e6dc2b694f6",
+            "classSha256": "11d138d4c63b9e397f1987c63cb386ab16522fae68da359c3960f0881b436599",
+            "mixin": "me.jellysquid.mods.lithium.mixin.world.temperature_cache.BiomeMixin",
+            "handler": "method_21740",
+            "descriptor": "(Lnet/minecraft/class_2338;)F",
+            "kind": "Overwrite",
+            "selector": [
+              "method_21740(Lnet/minecraft/class_2338;)F"
+            ],
+            "refmapValue": null,
+            "plugin": "me.jellysquid.mods.lithium.mixin.LithiumMixinPlugin",
+            "declarationMatched": true
+          },
+          {
+            "artifactSha256": "86b8b4a7e6cb2a24e2ef618343ebf8efa05dced0b43decb042130f431c6786aa",
+            "classSha256": "c43a8c9131d118b67c9bb2ebcde046ae60cf7548500e15f976059883ed9469bd",
+            "mixin": "org.embeddedt.modernfix.common.mixin.perf.remove_biome_temperature_cache.BiomeMixin",
+            "handler": "method_21740",
+            "descriptor": "(Lnet/minecraft/class_2338;)F",
+            "kind": "Overwrite",
+            "selector": [
+              "method_21740(Lnet/minecraft/class_2338;)F"
+            ],
+            "refmapValue": null,
+            "plugin": "org.embeddedt.modernfix.core.ModernFixMixinPlugin",
+            "declarationMatched": true
+          }
+        ],
+        "runtimeGroundTruth": "UNAVAILABLE"
+      },
+      {
+        "findingId": "f4f8429bbaeb23129f6b7e54b1ba0d70aa0f15d299f40bab42fd1bea649b6ae1",
+        "rule": "MS004",
+        "target": {
+          "descriptor": "(IILnet/minecraft/class_2806;Z)Lnet/minecraft/class_2791;",
+          "gameVersion": "1.21.1",
+          "loaderProfile": "fabric:0.16.14",
+          "name": "method_12121",
+          "namespace": "intermediary",
+          "owner": "net/minecraft/class_3215"
+        },
+        "members": [
+          {
+            "artifactSha256": "86b8b4a7e6cb2a24e2ef618343ebf8efa05dced0b43decb042130f431c6786aa",
+            "classSha256": "786f1eeef106399830a2d862e33b44d10531dbec4f9f19b572f6a41fd11a52ee",
+            "mixin": "org.embeddedt.modernfix.common.mixin.feature.stalled_chunk_load_detection.ServerChunkCacheMixin",
+            "handler": "bailIfServerDead",
+            "descriptor": "(IILnet/minecraft/class_2806;ZLorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V",
+            "kind": "Inject",
+            "selector": [
+              "getChunk"
+            ],
+            "refmapValue": "Lnet/minecraft/class_3215;method_12121(IILnet/minecraft/class_2806;Z)Lnet/minecraft/class_2791;",
+            "plugin": "org.embeddedt.modernfix.core.ModernFixMixinPlugin",
+            "declarationMatched": true
+          },
+          {
+            "artifactSha256": "1f4385a8ee2c04e46fdacdfa3f751d17f53d1f4c2332f88942308e6dc2b694f6",
+            "classSha256": "1f7c9ab6bb770c3b219f665f8ba84c45edb7296480d081e8b267a3c1e72c3c33",
+            "mixin": "me.jellysquid.mods.lithium.mixin.world.chunk_access.ServerChunkManagerMixin",
+            "handler": "method_12121",
+            "descriptor": "(IILnet/minecraft/class_2806;Z)Lnet/minecraft/class_2791;",
+            "kind": "Overwrite",
+            "selector": [
+              "method_12121(IILnet/minecraft/class_2806;Z)Lnet/minecraft/class_2791;"
+            ],
+            "refmapValue": null,
+            "plugin": "me.jellysquid.mods.lithium.mixin.LithiumMixinPlugin",
+            "declarationMatched": true
+          }
+        ],
+        "runtimeGroundTruth": "UNAVAILABLE"
+      }
+    ]
+  }
+}

@@ -85,4 +85,23 @@ class CompiledFixtureTest {
         Report argument=analyze("ArgumentCalculator","ArgumentA","ArgumentB");
         Finding f=argument.findings.stream().filter(x->x.rule.equals("MS006")).findFirst().orElseThrow();assertEquals(Severity.MEDIUM,f.severity);assertEquals(Confidence.HIGH,f.confidence);
     }
+    @Test void exportStaticReportsForRuntimeEvidenceComparison() throws Exception {
+        Map<String,List<String>> cases=new TreeMap<>();
+        for(String kind:List.of("Safe","Chain","Method","Bypass","Overwrite","Redirect","Argument"))
+            cases.put(kind+"Calculator",List.of(kind+"A",kind+"B"));
+        cases.put("DelegatedCalculator",List.of("Delegated"));
+        cases.put("InitializerCalculator",List.of("InitializerMixin"));
+        cases.put("OptionalInheritedChild",List.of("OptionalInherited"));
+        cases.put("RequiredInheritedChild",List.of("RequiredInherited"));
+        cases.put("OverwriteInheritedChild",List.of("InheritedOverwrite"));
+        cases.put("OwnedOverrideChild",List.of("OwnedOverride"));
+        cases.put("ExplicitOwnerCalculator",List.of("ExplicitOwner"));
+        Path output=Path.of("build/runtime-fixture/static");Files.createDirectories(output);
+        for(var entry:cases.entrySet()) {
+            Report report=analyze(entry.getKey(),entry.getValue().toArray(String[]::new));
+            assertFalse(report.coverage.partial,entry.getKey());
+            Files.writeString(output.resolve(entry.getKey()+".json"),Util.JSON.writerWithDefaultPrettyPrinter().writeValueAsString(report)+"\n");
+        }
+    }
+
 }

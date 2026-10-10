@@ -97,3 +97,7 @@ ruleset 3 では own declarations のみから candidateKeys と命令を検証�
 suppression 全体の検証前に finding を変更しない。未知 field の誤記による広い抑制、欠損 header / coverage / 重複 finding ID の baseline、stdout 書込み失敗を回帰テストで確認する。baseline 検証は比較に使用する構造の検査で、レポートの署名や出所の真正性を確認するものではない。
 
 最終ローカル検証：160 Java tests / failures=0、14 authored runtime cases、8 JSON Schema reports、HTML DOM、installDist / distZip / distTarが成功。ruleset 4 の固定6ケースはすべてexit 0 / partial=false。Fabricのfindingは270→269、Lithium更新差分はnew=3 / unchanged=266 / unverifiedDisappearance=3。未対応注入点を候補一致から外した差であり、runtime競合の解消とは扱わない。
+
+## 静的判定とruntime観測の対応付け
+
+`./gradlew --no-daemon test fixtureIntegration` の後、`python3 tools/evaluate-evidence.py` で14ケースのrule / severity / confidence / coverageとruntime観測を照合する。固定実Modのキャッシュと6レポートがある場合は `python3 tools/evaluate-evidence.py --real` でJDKのjavapによる宣言照合を追加できる。ダウンロードとMod実行は行わない。詳細・結果・評価できない指標は[evidence-evaluation.md](evidence-evaluation.md)、[evidence-results.json](evidence-results.json)。

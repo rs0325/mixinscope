@@ -25,6 +25,8 @@ jobs:
           node-version: '22'
       - name: Test and package
         run: ./gradlew --no-daemon test fixtureIntegration demo installDist distZip distTar
+      - name: Compare authored static and runtime evidence
+        run: python tools/evaluate-evidence.py
       - name: CLI smoke test
         run: |
           build/install/mixinscope/bin/mixinscope --help
@@ -36,6 +38,7 @@ jobs:
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm test:html
           pnpm test:schema
+          node tools/test-schema.mjs build/runtime-fixture/static/*.json
       - name: Native Windows launcher smoke test
         if: runner.os == 'Windows'
         shell: pwsh
@@ -61,3 +64,5 @@ jobs:
             build/benchmark/results.csv
             build/benchmark/environment.json
             build/runtime-fixture/results.json
+            build/runtime-fixture/static/*.json
+            build/evidence-review/authored-results.json

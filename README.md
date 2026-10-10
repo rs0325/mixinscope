@@ -158,7 +158,7 @@ python3 tools/verify-real-mods.py --download
 # 2回目以降は download オプションなしで検証済み cache を利用
 ```
 
-版・入手元・SHA-512 / SHA-256 / SHA-1 は [manifest](docs/real-mods-manifest.json)、固定 corpus の検証結果と限界は [検証ガイド](docs/validation.md) に記録しています。取得した Mod JAR と plugin は実行しません。第三者 JAR は commit しません。外観の目視確認は未完了です。
+版・入手元・SHA-512 / SHA-256 / SHA-1 は [manifest](docs/real-mods-manifest.json)、固定 corpus の検証結果と限界は [検証ガイド](docs/validation.md) に記録しています。[判定根拠の評価](docs/evidence-evaluation.md)では、自作runtime対照14ケースと静的判定の対応、および固定実Modの宣言照合を記録しています。Minecraft上のprecision / recallは未測定です。取得した Mod JAR と plugin は実行しません。第三者 JAR は commit しません。通常・長い名前・253件・空レポートは実Chromeで目視とキーボード操作を確認済みです（[観測記録](docs/html-verification.md)）。
 
 [初期設計](https://github.com/rs0325/mixinscope/issues/1) · [開発 Issue](https://github.com/rs0325/mixinscope/issues) · [Report schema](docs/report.schema.json)
 

@@ -85,13 +85,13 @@ public final class Reports {
         <title>MixinScope report</title>
         <style>
         :root{color-scheme:light dark;font-family:system-ui,sans-serif}*{box-sizing:border-box}body{max-width:1100px;margin:32px auto;padding:0 20px;line-height:1.5;overflow-wrap:anywhere}
-        input,select,button{font:inherit;padding:6px;margin:4px;max-width:calc(100% - 8px)}label{display:inline-block;max-width:100%}article,details{border:1px solid #8888;border-radius:8px;padding:16px;margin:12px 0}
+        input,select,button{font:inherit;padding:6px;margin:4px;min-width:0;max-width:calc(100% - 8px)}label{display:inline-block;max-width:100%}article,details{border:1px solid #8888;border-radius:8px;padding:16px;margin:12px 0}
         h1,h2,h3{line-height:1.2}.HIGH{border-left:6px solid #d85050}.MEDIUM{border-left:6px solid #c59524}.LOW{border-left:6px solid #449478}
         section.group{border:1px solid #8888;border-radius:8px;padding:12px;margin:8px 0}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid #528cff;outline-offset:3px}
         pre{white-space:pre-wrap;overflow-wrap:anywhere}.muted{opacity:.75}li{overflow-wrap:anywhere}a{color:inherit}summary,button{cursor:pointer}
         .edge{padding:4px 12px;margin:4px;background:#8882;border-radius:4px}.badge{font-size:.9em;font-weight:bold}
         nav{display:flex;flex-wrap:wrap;gap:8px 20px}nav a{padding:4px}
-        @media(max-width:600px){body{margin:16px auto;padding:0 12px}#filters{display:grid;gap:8px}#filters label{display:grid}#filters label.check{display:flex;align-items:center}#filters button{justify-self:start}}
+        @media(max-width:600px){body{margin:16px auto;padding:0 12px}#filters{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}#filters label{display:grid;min-width:0}#filters label.check{display:flex;align-items:center}#filters button{justify-self:start}}
         </style></head><body>
         <h1>MixinScope</h1><p>Static compatibility analysis. No findings does not establish compatibility.</p>
         <nav aria-label="Report sections"><a id="jump-filters" href="#filters">Filters</a><a id="jump-findings" href="#count">Findings</a><a id="jump-inventory" href="#inventory">Inventory</a></nav>

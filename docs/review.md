@@ -27,4 +27,4 @@
 
 160件のJava回帰テスト、14ケースの自作runtime対照、8レポートのJSON Schema検証、HTML DOM検証、固定実Mod6ケースの静的解析、配布物生成がローカルで成功。3 OS CIの結果はdraft PR #18の最新検証欄に記録する。コマンドと観測結果は[validation.md](validation.md)、[real-mods-results.json](real-mods-results.json)、draft PR #18の検証欄を参照。
 
-レビューで見つけた上記の問題は修正済み。リリース前のHTML目視・キーボード確認は未完了。実Modpackのfalse positives / false negatives、他runtime版、完全なloader依存選択と任意transformerの効果は既知の未検証範囲として維持する。レビュー記録はmainへのマージやリリース承認を意味しない。
+レビューで見つけた上記の問題は修正済み。その後の実Chrome確認で通常レポートの目視・キーボード操作を検証し、320px幅でfilterが横へ広がる問題を修正した。長い名前・253件・空レポートの実画面は準備待ちで、HTMLの包括的な確認は未完了。詳細は[html-verification.md](html-verification.md)。実Modpackのfalse positives / false negatives、他runtime版、完全なloader依存選択と任意transformerの効果は既知の未検証範囲として維持する。レビュー記録はmainへのマージやリリース承認を意味しない。

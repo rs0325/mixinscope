@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.github.rs0325"
-version = "0.1.0-SNAPSHOT"
+version = file("VERSION").readText().trim()
 
 repositories {
     mavenCentral()
@@ -12,6 +12,14 @@ repositories {
 }
 java { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }
 application { mainClass.set("io.github.rs0325.mixinscope.cli.Main") }
+tasks.processResources { from("VERSION") { rename { "mixinscope-version.txt" } } }
+distributions.main {
+    contents {
+        from("LICENSE", "README.md", "CHANGELOG.md", "THIRD-PARTY.md", "VERSION")
+        from("docs") { into("docs") }
+        from("licenses") { into("licenses") }
+    }
+}
 
 dependencies {
     implementation("org.ow2.asm:asm:9.11")

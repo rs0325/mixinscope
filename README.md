@@ -4,6 +4,12 @@ Minecraft Mod の JAR を実行せずに読み、Mixin の適用対象と潜在�
 
 **開発版です。** 静的な変更箇所の重複と危険度の候補を報告します。実際の Modpack の互換性やクラッシュを確定するものではありません。
 
+## 配布候補から使う
+
+初回プレリリース候補は `0.1.0-alpha.1` です。現在は公開準備中。ZIP / TARを展開した場合、macOS / Linuxは `./mixinscope-0.1.0-alpha.1/bin/mixinscope`、Windowsは `mixinscope-0.1.0-alpha.1\bin\mixinscope.bat` を使います。`bin`と`lib`を一緒に保持してください。通常の解析にはJava 21以上だけが必要です。
+
+[公開候補の利用手順・リリースノート](docs/release-notes.md) · [公開準備と検証](docs/release-preparation.md) · [同梱依存のlicense / notice](THIRD-PARTY.md)
+
 ## 必要環境とビルド
 
 Java 21 以上が必要です。Gradle Wrapper と依存ロックを同梱しています。通常の解析には Node.js は不要です。

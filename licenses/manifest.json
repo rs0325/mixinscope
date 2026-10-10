@@ -1,0 +1,116 @@
+[
+  {
+    "file": "antlr4-runtime-4.11.1.jar",
+    "sha256": "e06c6553c1ccc14d36052ec4b0fc6f13b808cf957b5b1dc3f61bf401996ada59",
+    "notices": [
+      "licenses/antlr4-runtime-4.11.1-LICENSE.txt"
+    ],
+    "source": "https://raw.githubusercontent.com/antlr/antlr4/4.11.1/LICENSE.txt"
+  },
+  {
+    "file": "asm-9.11.jar",
+    "sha256": "5fe3b469b8646e5bc53a897840952d63b712d4923d2a7a26aebc585f1fec7676",
+    "notices": [
+      "licenses/asm-9.11-LICENSE.txt"
+    ],
+    "source": "https://asm.ow2.io/license.html"
+  },
+  {
+    "file": "asm-tree-9.11.jar",
+    "sha256": "da8ad24d0bf7efb0674a906f59a7d441692b641718371f3bce6762b191a169fd",
+    "notices": [
+      "licenses/asm-9.11-LICENSE.txt"
+    ],
+    "source": "https://asm.ow2.io/license.html"
+  },
+  {
+    "file": "checker-qual-3.21.2.jar",
+    "sha256": "7e8554c902b9b839e61396cfe3a64c84ecabfb8eb652c410bfd8e4f5c1a8ece8",
+    "notices": [
+      "licenses/checker-qual-3.21.2/META-INF/LICENSE.txt"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "commons-codec-1.19.0.jar",
+    "sha256": "5c3881e4f556855e9c532927ee0c9dfde94cc66760d5805c031a59887070af5f",
+    "notices": [
+      "licenses/commons-codec-1.19.0/META-INF/LICENSE.txt",
+      "licenses/commons-codec-1.19.0/META-INF/NOTICE.txt"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "commons-compress-1.28.0.jar",
+    "sha256": "e1522945218456f3649a39bc4afd70ce4bd466221519dba7d378f2141a4642ca",
+    "notices": [
+      "licenses/commons-compress-1.28.0/META-INF/LICENSE.txt",
+      "licenses/commons-compress-1.28.0/META-INF/NOTICE.txt"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "commons-io-2.20.0.jar",
+    "sha256": "df90bba0fe3cb586b7f164e78fe8f8f4da3f2dd5c27fa645f888100ccc25dd72",
+    "notices": [
+      "licenses/commons-io-2.20.0/META-INF/LICENSE.txt",
+      "licenses/commons-io-2.20.0/META-INF/NOTICE.txt"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "commons-lang3-3.18.0.jar",
+    "sha256": "4eeeae8d20c078abb64b015ec158add383ac581571cddc45c68f0c9ae0230720",
+    "notices": [
+      "licenses/commons-lang3-3.18.0/META-INF/LICENSE.txt",
+      "licenses/commons-lang3-3.18.0/META-INF/NOTICE.txt"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "jackson-annotations-2.20.jar",
+    "sha256": "959a2ffb2d591436f51f183c6a521fc89347912f711bf0cae008cdf045d95319",
+    "notices": [
+      "licenses/jackson-annotations-2.20/META-INF/LICENSE",
+      "licenses/jackson-annotations-2.20/META-INF/NOTICE"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "jackson-core-2.20.1.jar",
+    "sha256": "ffab4d957daa2796cf24cb66d0b78a7090f1bcbe17c3a4578f09affaaf137089",
+    "notices": [
+      "licenses/jackson-core-2.20.1/META-INF/FastDoubleParser-LICENSE",
+      "licenses/jackson-core-2.20.1/META-INF/FastDoubleParser-NOTICE",
+      "licenses/jackson-core-2.20.1/META-INF/LICENSE",
+      "licenses/jackson-core-2.20.1/META-INF/NOTICE",
+      "licenses/jackson-core-2.20.1/META-INF/thirdparty-LICENSE"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "jackson-databind-2.20.1.jar",
+    "sha256": "34bbeb4526fff4f8565b12106bf85a6afcbae858966d489b54214ac46b2e26e8",
+    "notices": [
+      "licenses/jackson-databind-2.20.1/META-INF/LICENSE",
+      "licenses/jackson-databind-2.20.1/META-INF/NOTICE"
+    ],
+    "source": "Bundled unchanged JAR META-INF license / notice entries"
+  },
+  {
+    "file": "picocli-4.7.7.jar",
+    "sha256": "f86e30fffd10d2b13b8caa8d4b237a7ee61f2ffccf5b1941de718b765d235bf8",
+    "notices": [
+      "licenses/picocli-4.7.7-LICENSE.txt"
+    ],
+    "source": "https://raw.githubusercontent.com/remkop/picocli/v4.7.7/LICENSE"
+  },
+  {
+    "file": "tomlj-1.1.1.jar",
+    "sha256": "383b7c66966c42ee4913ec977a7b6573631866bddc5318ec4a6215b688dd0d6c",
+    "notices": [
+      "licenses/tomlj-1.1.1-LICENSE.txt"
+    ],
+    "source": "https://raw.githubusercontent.com/tomlj/tomlj/1.1.1/LICENSE"
+  }
+]

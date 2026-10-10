@@ -27,6 +27,8 @@ jobs:
         run: ./gradlew --no-daemon test fixtureIntegration demo installDist distZip distTar
       - name: Compare authored static and runtime evidence
         run: python tools/evaluate-evidence.py
+      - name: Verify release distributions
+        run: python tools/prepare-release.py
       - name: CLI smoke test
         run: |
           build/install/mixinscope/bin/mixinscope --help
@@ -57,6 +59,7 @@ jobs:
           name: mixinscope-${{ runner.os }}
           path: |
             build/distributions/*
+            build/release/**
             build/reports/tests/test/**
             build/demo/report.*
             build/demo/*-report.html

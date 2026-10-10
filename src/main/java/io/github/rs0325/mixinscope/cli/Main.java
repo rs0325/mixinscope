@@ -12,7 +12,7 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-@Command(name = "mixinscope", mixinStandardHelpOptions = true, version = "MixinScope 0.1.0-SNAPSHOT",
+@Command(name = "mixinscope", mixinStandardHelpOptions = true, versionProvider = io.github.rs0325.mixinscope.BuildVersion.class,
         description = "Inspect Minecraft mod JARs without executing them.", subcommands = Main.Scan.class)
 public final class Main implements Runnable {
     @Spec CommandLine.Model.CommandSpec spec;

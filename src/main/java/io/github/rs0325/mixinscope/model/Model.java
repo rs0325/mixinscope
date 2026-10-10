@@ -96,7 +96,7 @@ public final class Model {
         public int suppressedFindings;
     }
     public static final class Report {
-        public String schemaVersion = "1.1", toolVersion = "0.1.0-SNAPSHOT", rulesetVersion = "4";
+        public String schemaVersion = "1.1", toolVersion = io.github.rs0325.mixinscope.BuildVersion.VERSION, rulesetVersion = "4";
         public Map<String, Object> environment = new TreeMap<>();
         public List<String> assumptions = new ArrayList<>();
         public List<Artifact> artifacts = new ArrayList<>();

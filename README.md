@@ -31,7 +31,7 @@ build/install/mixinscope/bin/mixinscope scan ./mods --format json --output repor
 build/install/mixinscope/bin/mixinscope scan ./mods --format html --output report.html
 ```
 
-HTML はネットワーク通信・外部 CDN なしで閲覧できます。検索、危険度・confidence・Mod・対象のフィルタと、対象から Mixin handler への逆引きがあります。JSON は完全な inventory と findings を保持し、表示フィルタの結果を `visibleFindingIds` に格納します。
+HTML はネットワーク通信・外部 CDN なしで閲覧できます。先頭の Filters / Findings / Inventory リンクで主要箇所へ移動できます。検索、危険度・confidence・Mod・対象のフィルタと、対象から Mixin handler への逆引きがあります。JSON は完全な inventory と findings を保持し、表示フィルタの結果を `visibleFindingIds` に格納します。
 
 同じ対象への finding は `targetGroups` にまとめ、影響 Mod・最大 risk・未抑制の最大 risk・規則を表示します。個々の finding ID と evidence も保持します。グループは game / loader profile / namespace / owner / method / descriptor を含むキーで区別します。変更を持つ Mod は、finding がなくても inventory から辿れます。
 
@@ -136,6 +136,7 @@ JSON payload の UTF-8 展開量は既定 64 MiB（`--max-report-mib`）まで�
 ```sh
 ./gradlew test fixtureIntegration demo benchmark distZip distTar
 # build/demo/report.{txt,json,html} と mods/*.jar を生成
+# 長い名前・253finding・空レポートのHTMLも生成（docs/html-verification.md参照）
 # build/benchmark/results.csv に 100/1000 JAR の検証結果
 ```
 

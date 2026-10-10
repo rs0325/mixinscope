@@ -74,7 +74,7 @@ FerriteCore Fabric `W4lg2p7U` の primary file は配布元でも `-dev.jar` で
 
 ## リリース前の目視確認
 
-`./gradlew demo` 後に `build/demo/report.html` をブラウザで開き、狭い画面・キーボード Tab 操作・検索・フィルタ・target graph・suppressed findings・長い Mod 名を確認する。DOM 自動テストだけでは外観確認の完了としない。
+`./gradlew demo` 後に `build/demo/report.html` をブラウザで開き、狭い画面・キーボード Tab 操作・検索・フィルタ・target graph・suppressed findings・長い Mod 名を確認する。DOM 自動テストだけでは外観確認の完了としない。具体的な手順と状態は[html-verification.md](html-verification.md)に記録する。
 
 ## 極端な入力と出力 budget
 

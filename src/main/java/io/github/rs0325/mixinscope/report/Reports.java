@@ -84,28 +84,33 @@ public final class Reports {
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'none'; connect-src 'none'">
         <title>MixinScope report</title>
         <style>
-        :root{color-scheme:light dark;font-family:system-ui,sans-serif}body{max-width:1100px;margin:32px auto;padding:0 20px;line-height:1.5}
-        input,select,button{font:inherit;padding:6px;margin:4px}label{display:inline-block}article,details{border:1px solid #8888;border-radius:8px;padding:16px;margin:12px 0}
+        :root{color-scheme:light dark;font-family:system-ui,sans-serif}*{box-sizing:border-box}body{max-width:1100px;margin:32px auto;padding:0 20px;line-height:1.5;overflow-wrap:anywhere}
+        input,select,button{font:inherit;padding:6px;margin:4px;max-width:calc(100% - 8px)}label{display:inline-block;max-width:100%}article,details{border:1px solid #8888;border-radius:8px;padding:16px;margin:12px 0}
         h1,h2,h3{line-height:1.2}.HIGH{border-left:6px solid #d85050}.MEDIUM{border-left:6px solid #c59524}.LOW{border-left:6px solid #449478}
-        section.group{border:1px solid #8888;border-radius:8px;padding:12px;margin:8px 0}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #528cff;outline-offset:3px}
+        section.group{border:1px solid #8888;border-radius:8px;padding:12px;margin:8px 0}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid #528cff;outline-offset:3px}
         pre{white-space:pre-wrap;overflow-wrap:anywhere}.muted{opacity:.75}li{overflow-wrap:anywhere}a{color:inherit}summary,button{cursor:pointer}
         .edge{padding:4px 12px;margin:4px;background:#8882;border-radius:4px}.badge{font-size:.9em;font-weight:bold}
+        nav{display:flex;flex-wrap:wrap;gap:8px 20px}nav a{padding:4px}
+        @media(max-width:600px){body{margin:16px auto;padding:0 12px}#filters{display:grid;gap:8px}#filters label{display:grid}#filters label.check{display:flex;align-items:center}#filters button{justify-self:start}}
         </style></head><body>
         <h1>MixinScope</h1><p>Static compatibility analysis. No findings does not establish compatibility.</p>
+        <nav aria-label="Report sections"><a id="jump-filters" href="#filters">Filters</a><a id="jump-findings" href="#count">Findings</a><a id="jump-inventory" href="#inventory">Inventory</a></nav>
+        <main>
         <p id="coverage" role="status"></p>
-        <form id="filters"><label>Search <input id="search" type="search"></label>
+        <form id="filters" aria-label="Finding filters"><label>Search <input id="search" type="search"></label>
         <label>Minimum risk <select id="risk"><option value="">All</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select></label>
         <label>Confidence <select id="confidence"><option value="">All</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select></label>
         <label>Mod <select id="mod"><option value="">All</option></select></label>
         <label>Target <select id="target"><option value="">All</option></select></label>
-        <label><input id="suppressed" type="checkbox" checked> Include suppressed</label>
+        <label class="check"><input id="suppressed" type="checkbox" checked> Include suppressed</label>
         <button type="reset">Reset</button></form>
         <h2>Target summaries</h2><p id="group-count" aria-live="polite"></p><div id="groups"></div>
         <h2>Individual findings</h2><p id="count" aria-live="polite" tabindex="-1"></p><div id="findings"></div>
         <button id="more" type="button">Show 100 more findings</button>
-        <details id="inventory"><summary>Inventory and target graph</summary><p>Choose a mod to list its targets, or a target to inspect all of its modifications, including declared ineligible modifications. At most 200 entries are drawn.</p><div id="graph"></div></details>
+        <details id="inventory"><summary id="inventory-summary">Inventory and target graph</summary><p>Choose a mod to list its targets, or a target to inspect all of its modifications, including declared ineligible modifications. At most 200 entries are drawn.</p><div id="graph"></div></details>
         <details><summary>Assumptions and analysis coverage</summary><pre id="diagnostics"></pre></details>
         <details><summary>Suppression and baseline</summary><pre id="history"></pre></details>
+        </main>
         <script id="report" type="application/json">__REPORT_DATA__</script>
         <script>
         'use strict';
@@ -136,14 +141,14 @@ public final class Reports {
             const confidence=members.filter(f=>f.severity===max).reduce((conf,f)=>levels[f.confidence]<levels[conf]?f.confidence:conf,'HIGH');
             const section=el('section',undefined,'group '+max);section.dataset.targetKey=id;
             section.append(el('h3',label(members[0].target)),el('p','Maximum risk: '+max+' · '+confidence+' confidence · Active risk: '+(active||'none (all suppressed)')+' · '+members.length+' findings · Rules: '+[...new Set(members.map(f=>f.rule))].join(', ')));
-            const button=el('button','Inspect target');button.type='button';button.addEventListener('click',()=>inspect(id));section.append(button);get('groups').append(section);
+            const button=el('button','Inspect target');button.type='button';button.setAttribute('aria-label','Inspect target '+label(members[0].target));button.addEventListener('click',()=>inspect(id));section.append(button);get('groups').append(section);
           }
           for(const f of items.slice(0,limit)){
             const card=el('article',undefined,f.severity);card.dataset.findingId=f.id;
             card.append(el('h3',display(f.target)),el('p',f.severity+' · '+f.confidence+' confidence · '+f.rule+(f.suppressed?' · SUPPRESSED':''),'badge'));
             const mods=el('p','Affected mods: ');
-            for(const name of f.mods){const b=el('button',name);b.type='button';b.addEventListener('click',()=>{get('mod').value=name;limit=100;render();get('mod').focus();});mods.append(b);}
-            card.append(mods,el('p',f.reason));const b=el('button','Inspect target');b.type='button';b.addEventListener('click',()=>inspect(key(f.target)));card.append(b);
+            for(const name of f.mods){const b=el('button',name);b.type='button';b.setAttribute('aria-label','Filter findings by mod '+name);b.addEventListener('click',()=>{get('mod').value=name;limit=100;render();get('mod').focus();});mods.append(b);}
+            card.append(mods,el('p',f.reason));const b=el('button','Inspect target');b.type='button';b.setAttribute('aria-label','Inspect target '+label(f.target));b.addEventListener('click',()=>inspect(key(f.target)));card.append(b);
             const details=el('details');details.append(el('summary','Evidence, assumptions and limitations'),el('pre',JSON.stringify({id:f.id,modifications:f.modifications.map(id=>byId.get(id)),scenarios:f.scenarios,evidence:f.evidence,limitations:f.limitations,suppression:f.suppressionReason},null,2)));card.append(details);get('findings').append(card);
           }
           get('more').hidden=items.length<=limit;if(get('more').hidden&&document.activeElement===get('more'))get('count').focus();get('graph').replaceChildren();
@@ -157,6 +162,7 @@ public final class Reports {
           }else get('graph').append(el('p','Select a mod or target above to inspect its inventory.'));
         }
         function inspect(id){get('target').value=id;get('inventory').open=true;limit=100;render();get('target').focus();}
+        for(const [link,destination]of [['jump-filters','search'],['jump-findings','count'],['jump-inventory','inventory-summary']])get(link).addEventListener('click',event=>{event.preventDefault();if(destination==='inventory-summary')get('inventory').open=true;get(destination).focus();});
         get('filters').addEventListener('input',()=>{limit=100;render();});get('filters').addEventListener('submit',e=>e.preventDefault());
         get('filters').addEventListener('reset',()=>setTimeout(()=>{limit=100;render();},0));get('more').addEventListener('click',()=>{limit+=100;render();});render();
         </script></body></html>

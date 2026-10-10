@@ -56,6 +56,8 @@ jobs:
             build/distributions/*
             build/reports/tests/test/**
             build/demo/report.*
+            build/demo/*-report.html
+            build/demo/long-label-report.json
             build/benchmark/results.csv
             build/benchmark/environment.json
             build/runtime-fixture/results.json

@@ -19,6 +19,12 @@ public final class Demo {
         Files.writeString(directory.resolve("report.json"),Reports.json(report));
         Files.writeString(directory.resolve("report.txt"),Reports.text(report,report.findings));
         Files.writeString(directory.resolve("report.html"),Reports.html(report));
+        // Deliberately long unbroken labels for manual narrow-screen QA; authored data only.
+        Report longLabels=Util.JSON.readValue(Reports.json(report).replace("game/Player","game/"+"LongTargetName".repeat(20)+"Player")
+                .replace("mod_a","mod_a_"+"long_name_".repeat(30)),Report.class);
+        Files.writeString(directory.resolve("long-label-report.json"),Reports.json(longLabels));
+        Files.writeString(directory.resolve("long-label-report.html"),Reports.html(longLabels));
+        Files.writeString(directory.resolve("empty-report.html"),Reports.html(new Report()));
         report.findings.getFirst().reason="</script><script>globalThis.pwned=1</script>";
         Files.writeString(directory.resolve("escaped-report.html"),Reports.html(report));
         Report stress=Util.JSON.readValue(Reports.json(report),Report.class);

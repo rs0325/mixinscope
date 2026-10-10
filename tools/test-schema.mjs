@@ -5,7 +5,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 const schema=JSON.parse(fs.readFileSync('docs/report.schema.json','utf8'));
 const validator=new Ajv2020({allErrors:true,strict:true}).compile(schema);
 const paths=process.argv.slice(2);
-if(paths.length===0)paths.push('build/demo/report.json','build/demo/cli-report.json');
+if(paths.length===0)paths.push('build/demo/report.json','build/demo/cli-report.json','build/demo/long-label-report.json');
 for(const path of paths){
   const report=JSON.parse(fs.readFileSync(path,'utf8'));
   assert.equal(validator(report),true,path+': '+JSON.stringify(validator.errors));

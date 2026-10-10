@@ -19,6 +19,16 @@ assert.equal(document.querySelectorAll('article').length, report.findings.length
 assert.deepEqual([...document.querySelectorAll('article')].map(a => a.dataset.findingId), report.findings.map(f => f.id));
 assert.equal(get('groups').querySelectorAll('section').length, report.targetGroups.length);
 assert.match(get('groups').textContent, /MS001, MS002/);
+assert.equal(document.querySelectorAll('main').length, 1);
+assert.equal(get('filters').getAttribute('aria-label'), 'Finding filters');
+for (const id of ['search','risk','confidence','mod','target','suppressed']) assert.ok(get(id).labels.length, id + ' has a native label');
+for (const [link,destination] of [['jump-filters','search'],['jump-findings','count'],['jump-inventory','inventory-summary']]) {
+  get(link).click(); assert.equal(document.activeElement, get(destination));
+}
+assert.equal(get('inventory').open,true);
+for (const button of document.querySelectorAll('#groups button, article button')) {
+  assert.ok(button.getAttribute('aria-label')?.startsWith('Inspect target game/Player.attack()V') || button.getAttribute('aria-label')?.startsWith('Filter findings by mod mod_'));
+}
 change('risk', 'HIGH');
 assert.equal(document.querySelectorAll('article').length, 1);
 change('risk', '');
@@ -62,6 +72,7 @@ assert.equal(articles().length, 100);
 assert.equal(sget('groups').querySelectorAll('section').length, 2);
 assert.equal([...sget('target').options].filter(o => o.textContent.startsWith('game/Player.attack()V')).length, 2);
 sget('more').focus(); sget('more').click();assert.equal(articles().length, 200);assert.equal(sget('more').hidden, false);
+assert.equal(stress.window.document.activeElement,sget('more'));
 sget('more').click();assert.equal(articles().length, 253);assert.equal(sget('more').hidden, true);
 assert.equal(stress.window.document.activeElement,sget('count'));
 schange('risk', 'HIGH');assert.equal(articles().length,100);assert.equal(sget('more').hidden,false);
@@ -70,10 +81,23 @@ sget('filters').reset();await new Promise(resolve=>stress.window.setTimeout(reso
 const firstTarget=sget('groups').querySelector('section').dataset.targetKey;schange('target',firstTarget);
 assert.match(sget('count').textContent,/252 matching/);assert.match(sget('graph').textContent,/207 modifications; 200 shown/);assert.equal(sget('graph').querySelectorAll('.edge').length,200);
 assert.equal(sget('groups').querySelectorAll('section').length,1);
+sget('jump-inventory').click();assert.equal(sget('inventory').open,true);assert.equal(stress.window.document.activeElement,sget('inventory-summary'));
+const modButton=stress.window.document.querySelector('article button');modButton.click();assert.equal(stress.window.document.activeElement,sget('mod'));
 schange('confidence','LOW');assert.equal(articles().length,0);assert.equal(sget('more').hidden,true);
 stress.window.close();
 const unknown = new JSDOM(fs.readFileSync('build/demo/unknown-mod-report.html','utf8'),{runScripts:'dangerously',virtualConsole:console});
 assert.equal(unknown.window.document.getElementById('mod').value,'absent-mod');assert.equal(unknown.window.document.querySelectorAll('article').length,0);
 assert.match(unknown.window.document.getElementById('graph').textContent,/0 declared targets/);unknown.window.close();
+const long = new JSDOM(fs.readFileSync('build/demo/long-label-report.html','utf8'),{runScripts:'dangerously',virtualConsole:console});
+const lget=id=>long.window.document.getElementById(id),longReport=JSON.parse(lget('report').textContent);
+assert.ok(longReport.findings[0].target.owner.length>250);assert.ok(longReport.findings[0].mods.some(m=>m.length>250));
+assert.deepEqual([...long.window.document.querySelectorAll('article')].map(a=>a.dataset.findingId),longReport.findings.map(f=>f.id));
+const longButton=lget('groups').querySelector('button');assert.ok(longButton.getAttribute('aria-label').includes(longReport.findings[0].target.owner));longButton.click();
+assert.equal(long.window.document.activeElement,lget('target'));assert.equal(lget('inventory').open,true);assert.match(lget('graph').textContent,/LongTargetName/);
+long.window.close();
+const empty = new JSDOM(fs.readFileSync('build/demo/empty-report.html','utf8'),{runScripts:'dangerously',virtualConsole:console});
+assert.equal(empty.window.document.querySelectorAll('article').length,0);assert.equal(empty.window.document.getElementById('more').hidden,true);
+assert.match(empty.window.document.getElementById('count').textContent,/0 matching \/ 0 total/);empty.window.document.getElementById('jump-findings').click();
+assert.equal(empty.window.document.activeElement,empty.window.document.getElementById('count'));empty.window.close();
 assert.equal(errors.length,0,String(errors));
-process.stdout.write('HTML DOM checks passed: IDs, filters, inventory graph and script execution.\n');
+process.stdout.write('HTML DOM checks passed: IDs, filters, section navigation/focus, long/empty reports, inventory graph and script execution. Native keyboard and layout require browser QA.\n');

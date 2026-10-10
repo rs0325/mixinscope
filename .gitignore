@@ -1,0 +1,9 @@
+.gradle/
+.gradle-home/
+build/
+.idea/
+*.iml
+.DS_Store
+reports/
+node_modules/
+.pnpm-store/

@@ -2,6 +2,7 @@ package io.github.rs0325.mixinscope.report;
 
 import io.github.rs0325.mixinscope.core.Util;
 import io.github.rs0325.mixinscope.model.Model.*;
+import io.github.rs0325.mixinscope.rules.FindingGroups;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.*;
@@ -28,10 +29,11 @@ public final class ReportHistory {
             }
         }
         report.coverage.suppressedFindings = (int) report.findings.stream().filter(f -> f.suppressed).count();
+        FindingGroups.refresh(report);
     }
     public static void baseline(Report report, Path file) throws IOException {
         Report previous = Util.JSON.treeToValue(Util.JSON.readTree(readBytes(file)), Report.class);
-        if (!report.schemaVersion.equals(previous.schemaVersion)) throw new IOException("Baseline schema version mismatch");
+        if (!Set.of("1.0", "1.1").contains(previous.schemaVersion)) throw new IOException("Unsupported baseline schema version");
         Map<String, Finding> before = new TreeMap<>(), now = new TreeMap<>();
         for (Finding f : previous.findings) before.put(f.id, f);
         for (Finding f : report.findings) now.put(f.id, f);
@@ -39,7 +41,7 @@ public final class ReportHistory {
         List<String> unchanged = now.keySet().stream().filter(before::containsKey).toList();
         List<String> disappeared = before.keySet().stream().filter(id -> !now.containsKey(id)).toList();
         // Missing findings cannot be called resolved when analysis or semantics are incomparable.
-        boolean comparable = !report.coverage.partial && !previous.coverage.partial &&
+        boolean comparable = report.schemaVersion.equals(previous.schemaVersion) && !report.coverage.partial && !previous.coverage.partial &&
                 report.environment.equals(previous.environment) && report.rulesetVersion.equals(previous.rulesetVersion) &&
                 noGaps(report) && noGaps(previous);
         report.baseline.put("new", fresh); report.baseline.put("unchanged", unchanged);
@@ -47,6 +49,7 @@ public final class ReportHistory {
         report.baseline.put("unverifiedDisappearance", comparable ? List.of() : disappeared);
         report.baseline.put("environmentChanged", !report.environment.equals(previous.environment));
         report.baseline.put("rulesetChanged", !report.rulesetVersion.equals(previous.rulesetVersion));
+        report.baseline.put("schemaChanged", !report.schemaVersion.equals(previous.schemaVersion));
         List<String> oldHashes = previous.artifacts.stream().map(a -> a.hash).sorted().toList();
         List<String> hashes = report.artifacts.stream().map(a -> a.hash).sorted().toList();
         report.baseline.put("artifactsChanged", !oldHashes.equals(hashes));

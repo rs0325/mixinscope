@@ -24,17 +24,18 @@ jobs:
         with:
           node-version: '22'
       - name: Test and package
-        run: ./gradlew --no-daemon test demo installDist distZip distTar
+        run: ./gradlew --no-daemon test fixtureIntegration demo installDist distZip distTar
       - name: CLI smoke test
         run: |
           build/install/mixinscope/bin/mixinscope --help
           build/install/mixinscope/bin/mixinscope scan build/demo/mods --format json --output build/demo/cli-report.json
           node -e "const r=JSON.parse(require('fs').readFileSync('build/demo/cli-report.json'));if(!r.findings.some(f=>f.rule==='MS002'))process.exit(1)"
-      - name: HTML DOM tests
+      - name: HTML DOM and JSON Schema tests
         run: |
           npm install --global pnpm@11.25.0
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm test:html
+          pnpm test:schema
       - name: Native Windows launcher smoke test
         if: runner.os == 'Windows'
         shell: pwsh
@@ -57,3 +58,4 @@ jobs:
             build/demo/report.*
             build/benchmark/results.csv
             build/benchmark/environment.json
+            build/runtime-fixture/results.json

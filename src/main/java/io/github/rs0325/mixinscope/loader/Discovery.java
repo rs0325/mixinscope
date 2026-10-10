@@ -147,11 +147,14 @@ public final class Discovery {
         if (c.sides.isEmpty()) c.applicability = Applicability.INELIGIBLE;
         else if (!c.plugin.isEmpty() || a.nested) c.applicability = Applicability.CONDITIONAL;
         if ((a.partial || Boolean.TRUE.equals(a.metadata.get("schemaUnknown")) || Boolean.TRUE.equals(a.metadata.get("sideUnknown"))) && c.applicability != Applicability.INELIGIBLE) c.applicability = Applicability.UNKNOWN;
-        if ((!reg.required.isEmpty() || !reg.behavior.isEmpty()) && !options.metadataProfile.equals("fml-12.0")) {
+        boolean fmlProfile=options.metadataProfile.equals("fml-12.0")&&a.loader.equals("neoforge");
+        c.registration.put("conditionProfile",fmlProfile?"DECLARED:fml-12.0":"UNVERIFIED");
+        if ((!reg.required.isEmpty() || !reg.behavior.isEmpty()) && !fmlProfile) {
             c.applicability = c.sides.isEmpty() ? Applicability.INELIGIBLE : Applicability.UNKNOWN;
             report.diagnostic("METADATA_CONDITION_PROFILE_UNKNOWN", c.path, "New FML mixin attributes require explicit --metadata-profile fml-12.0; they are not applied to older profiles", false);
         }
-        if (!reg.behavior.isEmpty()) {
+        if (fmlProfile) FmlMetadataProfile.evaluateBehavior(c,reg.behavior,report);
+        else if (!reg.behavior.isEmpty()) {
             if (!c.sides.isEmpty()) c.applicability = Applicability.UNKNOWN;
             report.diagnostic("BEHAVIOR_VERSION_UNVERIFIED", c.path, "behaviorVersion is retained; loader-supported bounds and semantics are not emulated", false);
         }
@@ -175,10 +178,12 @@ public final class Discovery {
     private void checkRequiredMods() {
         Set<String> ids = new HashSet<>();
         for (Artifact a : report.artifacts) for (ModIdentity mod : a.mods) ids.add(mod.id());
+        if(!options.gameVersion.equals("unknown"))ids.add("minecraft");
+        if(options.loader.equals("neoforge")&&!options.loaderVersion.equals("unknown"))ids.add("neoforge");
         for (MixinConfig c : report.configs) if (!c.requiredMods.isEmpty()) {
-            if (!options.metadataProfile.equals("fml-12.0")) continue;
-            if (!ids.containsAll(c.requiredMods) && !report.coverage.partial) { c.applicability = Applicability.INELIGIBLE; report.diagnostic("REQUIRED_MOD_MISSING", c.path, "Required mods not present: " + c.requiredMods, false); }
-            else if (c.applicability == Applicability.ELIGIBLE) c.applicability = Applicability.CONDITIONAL;
+            if (!c.registration.get("conditionProfile").equals("DECLARED:fml-12.0")) {c.registration.put("requiredModsStatus","UNKNOWN_PROFILE");continue;}
+            if (!ids.containsAll(c.requiredMods) && !report.coverage.partial) { c.registration.put("requiredModsStatus","MISSING_FROM_DECLARED_INPUT");c.applicability = Applicability.INELIGIBLE; report.diagnostic("REQUIRED_MOD_MISSING", c.path, "Required mods not present in the declared inputs/profile: " + c.requiredMods, false); }
+            else {c.registration.put("requiredModsStatus",ids.containsAll(c.requiredMods)?"PRESENT_CANDIDATES":"UNKNOWN_PARTIAL_INPUT");if(c.applicability==Applicability.ELIGIBLE)c.applicability=Applicability.CONDITIONAL;}
         }
     }
     private void addMod(Artifact a, Map<String, Object> source, Map<String, Object> metadata) {

@@ -43,6 +43,7 @@ final class Fixtures {
                 case "Accessor", "Invoker" -> "Lorg/spongepowered/asm/mixin/gen/" + spec.kind + ";";
                 case "WrapOperation" -> "Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;";
                 case "WrapMethod" -> "Lcom/llamalad7/mixinextras/injector/wrapmethod/WrapMethod;";
+                case "WrapWithConditionV2" -> "Lcom/llamalad7/mixinextras/injector/v2/WrapWithCondition;";
                 case "ModifyExpressionValue", "ModifyReturnValue", "WrapWithCondition" -> "Lcom/llamalad7/mixinextras/injector/" + spec.kind + ";";
                 default -> "Lorg/spongepowered/asm/mixin/injection/" + spec.kind + ";";
             };
@@ -96,7 +97,7 @@ final class Fixtures {
     }
     static ScanOptions options(Path... inputs) {
         ScanOptions o = new ScanOptions(); o.inputs = Arrays.asList(inputs); o.gameVersion = "1.21.1"; o.namespace = "named";
-        o.loader = "fabric"; o.loaderVersion = "0.16.14"; o.mixinVersion = "0.8.7"; return o;
+        o.loader = "fabric"; o.loaderVersion = "0.16.14"; o.mixinVersion = "0.8.7"; o.mixinExtrasVersion = "0.4.1"; return o;
     }
     static Report scan(ScanOptions options) { return new io.github.rs0325.mixinscope.core.Scanner().scan(options); }
     static Set<String> rules(Report report) { return new TreeSet<>(report.findings.stream().map(f -> f.rule).toList()); }

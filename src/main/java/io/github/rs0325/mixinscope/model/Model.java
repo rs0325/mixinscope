@@ -39,14 +39,17 @@ public final class Model {
         public List<String> requiredMods = new ArrayList<>();
     }
     public static final class Modification {
-        public String id, artifact, config, mixin, handler, handlerDescriptor, kind;
+        public String id, artifact, config, mixin, handler, handlerDescriptor, kind, annotationDescriptor;
         public List<String> owners = new ArrayList<>();
         public List<String> selectors = new ArrayList<>();
         public Set<String> sides = new TreeSet<>();
         public Applicability applicability;
         public Map<String, Object> options = new TreeMap<>();
         public Map<String, Object> defaults = new TreeMap<>();
+        public Map<String, Object> handlerAnalysis = new TreeMap<>();
         public List<Map<String, Object>> at = new ArrayList<>();
+        public List<Map<String, Object>> normalizedAt = new ArrayList<>(), normalizedSlices = new ArrayList<>();
+        public boolean pointCandidatesNormalized;
         public List<Target> targets = new ArrayList<>();
         public boolean referenceOnly;
     }
@@ -56,6 +59,9 @@ public final class Model {
         public Resolution resolution = Resolution.UNRESOLVED;
         public Existence existence = Existence.UNVERIFIED;
         public List<String> candidates = new ArrayList<>();
+        public List<TargetKey> candidateKeys = new ArrayList<>();
+        public String candidateSource = "NONE", declaringOwner;
+        public boolean candidatesTruncated;
         public List<Integer> instructions = new ArrayList<>();
         public boolean instructionsVerified;
         public String bytecodeHash;
@@ -80,8 +86,17 @@ public final class Model {
         public boolean partial;
         public List<Diagnostic> diagnostics = new ArrayList<>();
     }
+    public static final class TargetGroup {
+        public String id;
+        public TargetKey target;
+        public Severity maxSeverity, activeMaxSeverity;
+        public Confidence maxSeverityConfidence;
+        public List<String> findingIds = new ArrayList<>(), rules = new ArrayList<>(), mods = new ArrayList<>(), modifications = new ArrayList<>();
+        public Set<String> scenarios = new TreeSet<>();
+        public int suppressedFindings;
+    }
     public static final class Report {
-        public String schemaVersion = "1.0", toolVersion = "0.1.0-SNAPSHOT", rulesetVersion = "1";
+        public String schemaVersion = "1.1", toolVersion = "0.1.0-SNAPSHOT", rulesetVersion = "2";
         public Map<String, Object> environment = new TreeMap<>();
         public List<String> assumptions = new ArrayList<>();
         public List<Artifact> artifacts = new ArrayList<>();
@@ -89,6 +104,7 @@ public final class Model {
         public List<Modification> modifications = new ArrayList<>();
         public List<Transformer> transformers = new ArrayList<>();
         public List<Finding> findings = new ArrayList<>();
+        public List<TargetGroup> targetGroups = new ArrayList<>();
         public Map<String, List<String>> targetIndex = new TreeMap<>();
         public Map<String, List<String>> modIndex = new TreeMap<>();
         public Map<String, Object> baseline = new TreeMap<>();

@@ -9,7 +9,9 @@ import java.util.*;
 public final class MixinParser {
     private static final String MIXIN = "Lorg/spongepowered/asm/mixin/Mixin;";
     private static final Set<String> INJECTORS = Set.of("Inject", "Redirect", "ModifyArg", "ModifyArgs", "ModifyVariable", "ModifyConstant");
-    private static final Set<String> EXTRAS = Set.of("WrapOperation", "WrapMethod", "ModifyExpressionValue", "ModifyReturnValue", "WrapWithCondition");
+    private static final String EXTRAS = "Lcom/llamalad7/mixinextras/injector/";
+    private static final Set<String> EXTRAS_ANNOTATIONS = Set.of(EXTRAS + "wrapoperation/WrapOperation;", EXTRAS + "wrapmethod/WrapMethod;",
+            EXTRAS + "ModifyExpressionValue;", EXTRAS + "ModifyReturnValue;", EXTRAS + "WrapWithCondition;", EXTRAS + "v2/WrapWithCondition;");
     private final ScanOptions options;
     private final Report report;
     public MixinParser(ScanOptions options, Report report) { this.options = options; this.report = report; }
@@ -30,7 +32,7 @@ public final class MixinParser {
                     byte[] bytes = artifact.entries.get(path);
                     if (bytes == null) { report.diagnostic("MIXIN_CLASS_MISSING", artifact.hash + "!/" + path, "Registered mixin class missing", true); continue; }
                     try {
-                        ClassNode node = classNode(bytes, false);
+                        ClassNode node = classNode(bytes, true);
                         if (!node.name.equals(Util.owner(className))) {
                             report.diagnostic("CLASS_NAME_MISMATCH", path, "Declared class path differs from class-file internal name", true); continue;
                         }
@@ -47,13 +49,14 @@ public final class MixinParser {
                             boolean recognized = false;
                             for (AnnotationNode annotation : annotations) {
                                 String kind = simpleName(annotation.desc);
-                                boolean injector = annotation.desc.startsWith("Lorg/spongepowered/asm/mixin/injection/") && INJECTORS.contains(kind);
-                                boolean extras = annotation.desc.startsWith("Lcom/llamalad7/mixinextras/injector/") && EXTRAS.contains(kind);
+                                boolean injector = INJECTORS.contains(kind) && annotation.desc.equals("Lorg/spongepowered/asm/mixin/injection/" + kind + ";");
+                                boolean extras = EXTRAS_ANNOTATIONS.contains(annotation.desc);
                                 boolean overwrite = annotation.desc.equals("Lorg/spongepowered/asm/mixin/Overwrite;");
                                 boolean reference = annotation.desc.equals("Lorg/spongepowered/asm/mixin/Shadow;") ||
                                         annotation.desc.equals("Lorg/spongepowered/asm/mixin/gen/Accessor;") || annotation.desc.equals("Lorg/spongepowered/asm/mixin/gen/Invoker;");
                                 if (!(injector || extras || overwrite || reference)) {
-                                    if (annotation.desc.contains("/injection/") || annotation.desc.contains("/mixinextras/"))
+                                    if ((annotation.desc.contains("/injection/") || annotation.desc.contains("/mixinextras/")) &&
+                                            !annotation.desc.equals("Lorg/spongepowered/asm/mixin/injection/Coerce;"))
                                         report.diagnostic("ANNOTATION_UNSUPPORTED", className + "." + method.name, annotation.desc, false);
                                     continue;
                                 }
@@ -61,6 +64,7 @@ public final class MixinParser {
                                 Modification m = new Modification();
                                 m.artifact = artifact.hash; m.config = config.path; m.mixin = className;
                                 m.handler = method.name; m.handlerDescriptor = method.desc; m.kind = kind;
+                                m.annotationDescriptor = annotation.desc;
                                 m.owners = owners; m.referenceOnly = reference; m.sides = new TreeSet<>(side);
                                 m.applicability = side.isEmpty() ? Applicability.INELIGIBLE : config.applicability;
                                 m.options = values(annotation); m.options.put("mixinDeclaration", declaration);
@@ -76,7 +80,11 @@ public final class MixinParser {
                                 m.defaults.put("injectorOrder", Util.integer(m.options.get("order"), kind.equals("Redirect") ? 10000 : 1000));
                                 int require = Util.integer(m.options.get("require"), -1);
                                 m.defaults.put("require", require < 0 ? Util.integer(Util.map(config.raw.get("injectors")).get("defaultRequire"), 0) : require);
+                                m.defaults.put("expect", Util.integer(m.options.get("expect"), 1));
+                                m.defaults.put("allow", Util.integer(m.options.get("allow"), -1));
+                                m.defaults.put("remap", Util.bool(m.options.get("remap"), true));
                                 m.defaults.put("semanticsProfile", knownProfile() ? "Mixin-0.8.7" : "ASSUMED:Mixin-0.8.7");
+                                if (extras) ExtrasProfiles.describe(m, method, options.mixinExtrasVersion, report);
                                 m.selectors = new ArrayList<>(Util.strings(m.options.get("method")));
                                 if (overwrite) m.selectors.add(method.name + method.desc);
                                 for (Object desc : Util.list(m.options.get("target"))) {
@@ -97,7 +105,7 @@ public final class MixinParser {
                                 if (prior == null) deduplicated.put(m.id, m);
                                 else { prior.sides.addAll(m.sides); if (m.applicability != Applicability.INELIGIBLE && prior.applicability == Applicability.INELIGIBLE) prior.applicability = m.applicability; }
                             }
-                            if (!recognized && !method.name.startsWith("<") && annotations.stream().noneMatch(a -> simpleName(a.desc).equals("Unique")))
+                            if (!recognized && !method.name.startsWith("<") && annotations.stream().noneMatch(a -> a.desc.equals("Lorg/spongepowered/asm/mixin/Unique;")))
                                 report.diagnostic("METHOD_MERGE_UNSUPPORTED", className + "." + method.name + method.desc,
                                         "Non-injector merge / intrinsic method may modify the target; effects are not analyzed", false);
                         }
@@ -108,6 +116,15 @@ public final class MixinParser {
             }
         }
         report.modifications.addAll(deduplicated.values());
+        List<String> extrasCandidates = report.artifacts.stream().flatMap(a -> a.mods.stream())
+                .filter(m -> m.id().equals("mixinextras")).map(ModIdentity::version).distinct().sorted().toList();
+        if (!extrasCandidates.isEmpty()) report.environment.put("mixinExtrasCandidates", extrasCandidates);
+        if (report.modifications.stream().anyMatch(m -> EXTRAS_ANNOTATIONS.contains(m.annotationDescriptor))) {
+            if (!ExtrasProfiles.known(options.mixinExtrasVersion)) report.diagnostic("EXTRAS_VERSION_UNVERIFIED", "profile",
+                    "No verified MixinExtras defaults for declared version " + options.mixinExtrasVersion + "; bundled candidates=" + extrasCandidates + ". Selection is not emulated", false);
+            else if (!extrasCandidates.isEmpty() && !extrasCandidates.contains(options.mixinExtrasVersion)) report.diagnostic("EXTRAS_VERSION_CANDIDATE_MISMATCH", "profile",
+                    "Declared MixinExtras profile differs from bundled candidates; loader-provided versions may exist", false);
+        }
         if (options.mixinVersion.equals("unknown")) report.diagnostic("MIXIN_VERSION_ASSUMED", "profile", "Defaults assume Mixin 0.8.7; actual priority / order semantics are unverified", false);
         else if (!knownProfile()) report.diagnostic("MIXIN_VERSION_UNSUPPORTED", "profile", "Declared version " + options.mixinVersion + " has no verified defaults profile; Mixin 0.8.7 defaults are assumed", false);
     }

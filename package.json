@@ -1,6 +1,12 @@
 {
   "name": "mixinscope-html-tests",
   "private": true,
-  "scripts": { "test:html": "node tools/test-html.mjs" },
-  "devDependencies": { "jsdom": "26.1.0" }
+  "scripts": {
+    "test:html": "node tools/test-html.mjs",
+    "test:schema": "node tools/test-schema.mjs"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "jsdom": "26.1.0"
+  }
 }

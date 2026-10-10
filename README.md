@@ -20,7 +20,7 @@ Windows では `gradlew.bat test installDist`、`build\install\mixinscope\bin\mi
 ```sh
 build/install/mixinscope/bin/mixinscope scan ./mods \
   --loader fabric --loader-version 0.16.14 \
-  --minecraft-version 1.21.1 --mixin-version 0.8.7 \
+  --minecraft-version 1.21.1 --mixin-version 0.8.7 --mixinextras-version 0.4.1 \
   --input-namespace intermediary --side client
 ```
 
@@ -32,6 +32,10 @@ build/install/mixinscope/bin/mixinscope scan ./mods --format html --output repor
 ```
 
 HTML はネットワーク通信・外部 CDN なしで閲覧できます。検索、危険度・confidence・Mod・対象のフィルタと、対象から Mixin handler への逆引きがあります。JSON は完全な inventory と findings を保持し、表示フィルタの結果を `visibleFindingIds` に格納します。
+
+同じ対象への finding は `targetGroups` にまとめ、影響 Mod・最大 risk・未抑制の最大 risk・規則を表示します。個々の finding ID と evidence も保持します。グループは game / loader profile / namespace / owner / method / descriptor を含むキーで区別します。変更を持つ Mod は、finding がなくても inventory から辿れます。
+
+名前だけの selector や wildcard は、他 Mod の descriptor 付き宣言から候補を収集します。これは完全なメソッド一覧ではなく、一つの候補が見つかっても解決済みにはしません。候補による重複は MS001 / LOW risk / LOW confidence に限定します。宣言された owner と、参照 classpath で確認した declaring owner は別々に記録します。
 
 `--mod mod_id`、`--target attack`、`--min-severity high` は表示用のフィルタです。CI の判定には `--fail-on high` を使います。表示フィルタで危険な finding を隠しても終了コードの判定は変わりません。
 
@@ -54,6 +58,8 @@ Refmap の default mappings を読み、必要なら `--refmap-context <name>` �
 
 Refmap は注入先メソッドと `@At target`、slice の境界にも適用し、元の annotation は保持します。注入点側の `remap=false` はその参照の変換を抑止します。元 bytecode で一致する注入点がない場合は、`require=0` でも診断に残します。
 
+`normalizedAt` / `normalizedSlices` は JAR-only の候補比較にも使います。refmap の文字列 class target は injector の `remap` と独立して扱います。shift が bytecode label をまたぐ場合や、literal point と参照 JAR の namespace が異なる場合は、命令位置を確認済みにはしません。
+
 ### 抑制と baseline
 
 ```json
@@ -72,6 +78,8 @@ build/install/mixinscope/bin/mixinscope scan ./mods \
 
 抑制は理由必須です。finding を削除せず、`suppressed` と理由を記録します。期限当日まで有効で、既定の評価日は UTC の現在日です。baseline は new / unchanged / resolved を返し、解析失敗・未解決・不明な条件・環境差などで消えた finding は `unverifiedDisappearance` とします。`resolved` も静的な finding の消失であり、互換性の保証ではありません。
 
+現在の report schema は 1.1、ruleset は 2 です。1.0 の baseline も読み取れますが、schema をまたぐ消失は `unverifiedDisappearance` に分類します。
+
 ## 初期の判定規則
 
 | Rule | 条件 | Risk |
@@ -87,6 +95,8 @@ build/install/mixinscope/bin/mixinscope scan ./mods \
 
 Risk と confidence は独立です。confidence は規則の条件をどれだけ確認できたかを示し、実行時競合の確定度ではありません。MS003 の JAR-only 比較は候補一致なので MEDIUM confidence、参照 bytecode で同じ命令を確認すると HIGH confidence になります。曖昧な selector、plugin、nested candidate、namespace 不明などは LOW confidence です。
 
+MS006 は命令の重複だけで暗黙の引数・local variable・handler 型の同一性を証明しません。引数 index が明示されていない場合などは、命令が一致しても MEDIUM confidence に留めます。
+
 ## 対応範囲
 
 | 項目 | 現在の範囲 |
@@ -95,13 +105,15 @@ Risk と confidence は独立です。confidence は規則の条件をどれだ�
 | 入力 class file | major 45–72（ASM 9.11、preview の実行互換性は未検証） |
 | Loader discovery | Fabric schema 1、Quilt schema 1、Forge/NeoForge TOML と manifest、登録された nested JAR |
 | Mixin | Inject / Redirect / Overwrite / ModifyArg(s) / ModifyVariable / ModifyConstant |
-| MixinExtras | WrapOperation / WrapMethod / ModifyExpressionValue / ModifyReturnValue / WrapWithCondition の宣言抽出 |
+| MixinExtras | 0.3.2 / 0.4.1 / 0.5.0 の固定 profile；WrapOperation / WrapMethod / ModifyExpressionValue / ModifyReturnValue / legacy・v2 WrapWithCondition |
 | 元 bytecode の注入点照合 | HEAD / RETURN / TAIL / exact INVOKE / exact FIELD / class-owner NEW / 明示的な型付き CONSTANT |
 | Slice | 一意な from/to boundary、ordinal、shift；未対応条件は診断 |
 | Mapping | Tiny v2.0 と refmap context；ProGuard/SRG は未対応 |
 | 他の変換 | Access Widener / class tweaker / AT / Coremod / transformation service 等の存在と解析範囲の記録 |
 
-NeoForge の `requiredMods` / `behaviorVersion` は旧版に無条件適用しません。`--metadata-profile fml-12.0` で明示的に新版の requiredMods 判定を選択できます。behaviorVersion の loader 内の許容範囲は未検証として残します。古い NeoForge で `META-INF/mods.toml` を使う場合は `--loader neoforge` を指定してください。
+MixinExtras の profile は `--mixinextras-version` で宣言します。numeric injector order と追加の application stage は分けて保持します。0.3.2 に存在しない WrapMethod / v2 WrapWithCondition は UNKNOWN として残します。bundled version は候補として記録し、実際に loader が選ぶ版を推測しません。wrapper の handler 内の直接的な `Operation.call` は記録しますが、helper への委譲・到達可能性・実行時の呼出し回数は判断しません。直接呼出しが見つからないことを bypass の証明や HIGH 判定の理由にはしません。
+
+NeoForge の `requiredMods` / `behaviorVersion` は旧版に無条件適用しません。`--metadata-profile fml-12.0` は [固定 FML snapshot](https://github.com/neoforged/FancyModLoader/tree/bcbdb3520249deba18d92de2fcbdcee550c75233) とその Mixin 依存 `0.17.1+mixin.0.8.7` を明示的に宣言する profile です。この snapshot の numeric behaviorVersion は 0.17.1 を許容し、既定 compatibility は 17001 です。Maven qualifier・独自の loader 依存版は未検証にします。これは Sponge Mixin の版 0.8.7 と異なる番号です。requiredMods の presence は入力候補と宣言した minecraft / neoforge から評価し、実際の依存選択は再現しません。古い NeoForge で `META-INF/mods.toml` を使う場合は `--loader neoforge` を指定してください。
 
 未対応の独自 selector、MixinExtras expression / local capture、method merge / intrinsic、動的登録は diagnostic に残します。plugin の getMixins / shouldApplyMixin / preApply / postApply は実行しません。ローダーの依存解決・JAR 選択も完全には再現しません。登録情報のない任意 transformer や、別メソッドを介した意味的干渉は検出できません。
 
@@ -111,12 +123,12 @@ NeoForge の `requiredMods` / `behaviorVersion` は旧版に無条件適用し�
 - `1`：明示した `--fail-on` の閾値以上の、抑制されていない finding がある。
 - `2`：入力・解析・出力エラー、部分失敗。`--strict` は diagnostic がある場合も 2 にします。2 は 1 に優先します。
 
-入力 Mod の class loading・初期化・plugin 実行はありません。ZIP entry の CRC、重複、unsafe path、symlink、展開量等をチェックします。既定の上限は archive 128 MiB、entry 16 MiB、総展開量 256 MiB、深さ 4、entry 50,000、圧縮比 200、candidate pairs 100,000、協調的な時間制限 120 秒です。`scan --help` のオプションで調整できます。pair 上限による省略は報告します。時間制限は Java 内の処理単位で確認するもので、OS の sandbox や強制 CPU 制限ではありません。
+入力 Mod の class loading・初期化・plugin 実行はありません。ZIP entry の CRC、重複、unsafe path、symlink、展開量等をチェックします。既定の上限は archive 128 MiB、entry 16 MiB、総展開量 256 MiB、深さ 4、entry 50,000、圧縮比 200、selector ごとの候補 1,000、candidate pairs 100,000、協調的な時間制限 120 秒です。`scan --help` のオプションで調整できます。候補・pair 上限による省略は報告します。時間制限は Java 内の処理単位で確認するもので、OS の sandbox や強制 CPU 制限ではありません。
 
 ## 自作の例と検証
 
 ```sh
-./gradlew test demo benchmark distZip distTar
+./gradlew test fixtureIntegration demo benchmark distZip distTar
 # build/demo/report.{txt,json,html} と mods/*.jar を生成
 # build/benchmark/results.csv に 100/1000 JAR の検証結果
 ```
@@ -126,9 +138,20 @@ HTML の DOM テストだけ追加で Node.js 22 以上と pnpm 11.25.0 を使�
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
 pnpm test:html
+pnpm test:schema
 ```
 
-CI は Windows／macOS／Linux で Java テストと CLI smoke test、HTML DOM テストを実行し、配布物を artifact として保存します。合成 fixture のテストは実際の Minecraft/Mixin 実行を証明するものではありません。外観の目視確認と実 Mod の検証手順は [検証ガイド](docs/validation.md) に記載しています。
+CI は Windows／macOS／Linux で Java テストと CLI smoke test、JSON Schema / HTML DOM テスト、自作 fixture の Mixin runtime テストを実行し、配布物を artifact として保存します。`fixtureIntegration` は外部入力を受け付けず、自作クラスだけを変換・実行します。テスト用 Mixin / MixinExtras は CLI 配布物に含めません。合成 annotation 形状のテスト、自作クラスの runtime テスト、Minecraft の実動作確認はそれぞれ別の検証です。
+
+実 Mod の固定 corpus は通常のテスト・CI ではダウンロードしません。Python 3 と curl を用意し、任意で次を実行できます。
+
+```sh
+./gradlew installDist
+python3 tools/verify-real-mods.py --download
+# 2回目以降は download オプションなしで検証済み cache を利用
+```
+
+版・入手元・SHA-512 / SHA-256 / SHA-1 は [manifest](docs/real-mods-manifest.json)、固定 corpus の検証結果と限界は [検証ガイド](docs/validation.md) に記録しています。取得した Mod JAR と plugin は実行しません。第三者 JAR は commit しません。外観の目視確認は未完了です。
 
 [初期設計](https://github.com/rs0325/mixinscope/issues/1) · [開発 Issue](https://github.com/rs0325/mixinscope/issues) · [Report schema](docs/report.schema.json)
 

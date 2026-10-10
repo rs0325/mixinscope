@@ -48,7 +48,7 @@ class ReportCliTest {
         ReportHistory.baseline(current,file);assertTrue(Util.list(current.baseline.get("resolved")).isEmpty());
     }
     @Test void changedMappingOrRulesetIsIncomparable() throws Exception {
-        Report previous=conflict();Path file=directory.resolve("baseline.json");Files.writeString(file,Reports.json(previous));Report current=conflict();current.environment.put("mapping",Map.of("hash","new"));current.rulesetVersion="2";
+        Report previous=conflict();Path file=directory.resolve("baseline.json");Files.writeString(file,Reports.json(previous));Report current=conflict();current.environment.put("mapping",Map.of("hash","new"));current.rulesetVersion=previous.rulesetVersion+"-changed";
         ReportHistory.baseline(current,file);assertEquals(true,current.baseline.get("environmentChanged"));assertEquals(true,current.baseline.get("rulesetChanged"));assertEquals(false,current.baseline.get("comparable"));
     }
     @Test void htmlEscapesScriptTerminatorsAndUsesTextNodes() throws Exception {

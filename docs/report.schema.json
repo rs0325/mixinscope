@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/rs0325/mixinscope/blob/main/docs/report.schema.json",
-  "title": "MixinScope report 1.0",
+  "title": "MixinScope report 1.1",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -19,11 +19,12 @@
     "baseline",
     "displayFilter",
     "visibleFindingIds",
-    "coverage"
+    "coverage",
+    "targetGroups"
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1.0"
+      "const": "1.1"
     },
     "toolVersion": {
       "type": "string"
@@ -93,6 +94,12 @@
     },
     "coverage": {
       "$ref": "#/$defs/coverage"
+    },
+    "targetGroups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/targetGroup"
+      }
     }
   },
   "additionalProperties": false,
@@ -279,7 +286,11 @@
         "instructions",
         "instructionsVerified",
         "bytecodeHash",
-        "limitation"
+        "limitation",
+        "candidateKeys",
+        "candidateSource",
+        "candidatesTruncated",
+        "declaringOwner"
       ],
       "properties": {
         "rawOwner": {
@@ -333,6 +344,25 @@
         },
         "limitation": {
           "type": "string"
+        },
+        "candidateKeys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/targetKey"
+          }
+        },
+        "candidateSource": {
+          "enum": [
+            "NONE",
+            "REFERENCE_BYTECODE",
+            "MOD_DECLARATIONS"
+          ]
+        },
+        "candidatesTruncated": {
+          "type": "boolean"
+        },
+        "declaringOwner": {
+          "$ref": "#/$defs/nullableString"
         }
       },
       "additionalProperties": false
@@ -355,7 +385,12 @@
         "defaults",
         "at",
         "targets",
-        "referenceOnly"
+        "referenceOnly",
+        "annotationDescriptor",
+        "handlerAnalysis",
+        "normalizedAt",
+        "normalizedSlices",
+        "pointCandidatesNormalized"
       ],
       "properties": {
         "id": {
@@ -415,6 +450,27 @@
           }
         },
         "referenceOnly": {
+          "type": "boolean"
+        },
+        "annotationDescriptor": {
+          "type": "string"
+        },
+        "handlerAnalysis": {
+          "type": "object"
+        },
+        "normalizedAt": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "normalizedSlices": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "pointCandidatesNormalized": {
           "type": "boolean"
         }
       },
@@ -600,6 +656,72 @@
           "items": {
             "$ref": "#/$defs/diagnostic"
           }
+        }
+      },
+      "additionalProperties": false
+    },
+    "targetGroup": {
+      "type": "object",
+      "required": [
+        "id",
+        "target",
+        "maxSeverity",
+        "activeMaxSeverity",
+        "maxSeverityConfidence",
+        "findingIds",
+        "rules",
+        "mods",
+        "modifications",
+        "scenarios",
+        "suppressedFindings"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/hash"
+        },
+        "target": {
+          "$ref": "#/$defs/targetKey"
+        },
+        "maxSeverity": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "activeMaxSeverity": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            null
+          ]
+        },
+        "maxSeverityConfidence": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "findingIds": {
+          "$ref": "#/$defs/strings"
+        },
+        "rules": {
+          "$ref": "#/$defs/strings"
+        },
+        "mods": {
+          "$ref": "#/$defs/strings"
+        },
+        "modifications": {
+          "$ref": "#/$defs/strings"
+        },
+        "scenarios": {
+          "$ref": "#/$defs/strings"
+        },
+        "suppressedFindings": {
+          "type": "integer",
+          "minimum": 0
         }
       },
       "additionalProperties": false

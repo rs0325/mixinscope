@@ -39,13 +39,18 @@ public final class TargetResolver {
             options.checkBudget();
             MixinConfig config = configs.get(m.artifact + "\u0000" + m.config);
             if (m.referenceOnly) continue;
+            InjectionCandidates.normalize(m,mappings,options.namespace,Util.bool(m.options.get("remap"),true)?namespace:options.namespace,rawReference->reference(config,m,rawReference),report);
             for (String owner : m.owners) for (String raw : m.selectors) {
                 Target target = new Target(); target.rawOwner = owner; target.rawSelector = raw;
                 m.targets.add(target);
                 String selector = reference(config, m, raw);
                 target.normalizedSelector = selector;
                 try {
-                    Selector s = parse(selector, owner);
+                    String fallbackOwner=owner;
+                    for(String declared:Util.strings(Util.map(m.options.get("mixinDeclaration")).get("targets")))if(Util.owner(declared).equals(owner)) {
+                        fallbackOwner=Util.owner(reference(config,m,declared,true));break;
+                    }
+                    Selector s = parse(selector, fallbackOwner);
                     String resolvedOwner = s.owner, name = s.name, descriptor = s.descriptor;
                     if (mappings != null && Util.bool(m.options.get("remap"), true)) {
                         name = mappings.method(resolvedOwner, name, descriptor);
@@ -53,19 +58,28 @@ public final class TargetResolver {
                     }
                     String targetNamespace = mappings != null && !Util.bool(m.options.get("remap"), true) ? options.namespace : namespace;
                     target.key = key(artifacts.get(m.artifact).loader, targetNamespace, resolvedOwner, name, descriptor);
+                    target.limitation = "Owner is the declared Mixin target. Its declaring superclass and target existence are unverified without reference classpath. Runtime application is unverified.";
                     target.resolution = !descriptor.isEmpty() && !name.contains("*") ? Resolution.RESOLVED : Resolution.AMBIGUOUS;
                     if (classes != null && !targetNamespace.equals(namespace)) {
                         report.diagnostic("LITERAL_NAMESPACE_UNVERIFIED", m.id, "remap=false selector remains in input namespace; output-namespace reference was not used", false);
                     } else if (classes != null) {
                         List<ClassIndex.Match> matches = classes.methods(resolvedOwner, name, descriptor);
-                        target.candidates = matches.stream().map(v -> v.owner() + "." + v.method().name + v.method().desc).sorted().toList();
-                        if (matches.size() == 1) {
+                        target.candidateSource = "REFERENCE_BYTECODE";
+                        target.candidateKeys = matches.stream().map(v -> key(artifacts.get(m.artifact).loader, targetNamespace, v.owner(), v.method().name, v.method().desc))
+                                .distinct().sorted(Comparator.comparing(TargetKey::display)).limit(options.maxSelectorCandidates).toList();
+                        target.candidates = target.candidateKeys.stream().map(TargetKey::display).toList();
+                        if (matches.size() > options.maxSelectorCandidates) candidateLimit(m, target);
+                        if (matches.size() == 1 && ((!descriptor.isEmpty() && !name.contains("*")) || classes.hierarchyComplete(resolvedOwner))) {
                             ClassIndex.Match match = matches.getFirst();
                             target.key = key(artifacts.get(m.artifact).loader, targetNamespace, match.owner(), match.method().name, match.method().desc);
                             target.resolution = Resolution.RESOLVED; target.existence = Existence.VERIFIED; target.bytecodeHash = match.hash();
+                            target.declaringOwner = match.owner();
                             target.limitation = "Reference bytecode precedes other transformers; runtime application is unverified.";
                             InstructionMatcher.resolve(match.method(), m, target, mappings, rawReference -> reference(config, m, rawReference), report);
-                        } else if (matches.size() > 1) target.resolution = Resolution.AMBIGUOUS;
+                        } else if (!matches.isEmpty()) {
+                            target.resolution = Resolution.AMBIGUOUS;
+                            if (!classes.hierarchyComplete(resolvedOwner)) report.diagnostic("REFERENCE_HIERARCHY_INCOMPLETE", resolvedOwner, "Incomplete hierarchy may hide additional selector candidates", false);
+                        }
                         else if (classes.contains(resolvedOwner) && classes.hierarchyComplete(resolvedOwner)) {
                             target.existence = Existence.MISSING; target.resolution = Resolution.UNRESOLVED;
                             report.diagnostic("TARGET_MISSING", target.key.display(), "No matching method in complete reference hierarchy", false);
@@ -75,13 +89,48 @@ public final class TargetResolver {
                 } catch (IllegalArgumentException ex) { report.diagnostic("SELECTOR_UNSUPPORTED", m.id, raw + ": " + ex.getMessage(), false); }
             }
         }
+        declarationCandidates();
+    }
+    private record OwnerKey(String game, String loader, String namespace, String owner) {
+        OwnerKey(TargetKey key) { this(key.gameVersion(), key.loaderProfile(), key.namespace(), key.owner()); }
+    }
+    private void declarationCandidates() {
+        Map<OwnerKey, Set<TargetKey>> declarations = new HashMap<>();
+        for (Modification m : report.modifications) for (Target t : m.targets)
+            if (t.key != null && t.resolution == Resolution.RESOLVED && t.existence != Existence.MISSING)
+                declarations.computeIfAbsent(new OwnerKey(t.key), k -> new TreeSet<>(Comparator.comparing(TargetKey::display))).add(t.key);
+        for (Modification m : report.modifications) for (Target t : m.targets) {
+            options.checkBudget();
+            if (t.key == null || t.resolution != Resolution.AMBIGUOUS || !t.candidateSource.equals("NONE")) continue;
+            String pattern = java.util.regex.Pattern.quote(t.key.name()).replace("*", "\\E.*\\Q");
+            List<TargetKey> matches = new ArrayList<>(); int count = 0;
+            for (TargetKey key : declarations.getOrDefault(new OwnerKey(t.key), Set.of())) {
+                options.checkBudget();
+                if (key.name().matches(pattern) && (t.key.descriptor().isEmpty() || t.key.descriptor().equals(key.descriptor()))) {
+                    count++; if (matches.size() < options.maxSelectorCandidates) matches.add(key);
+                }
+            }
+            t.candidateKeys = matches; t.candidates = matches.stream().map(TargetKey::display).toList();
+            if (!matches.isEmpty()) {
+                t.candidateSource = "MOD_DECLARATIONS";
+                t.limitation = "Candidates come from other static Mod declarations, not a complete method inventory. A single candidate does not resolve this selector. Declaring owner and runtime application remain unverified.";
+            }
+            if (count > options.maxSelectorCandidates) candidateLimit(m, t);
+        }
+    }
+    private void candidateLimit(Modification m, Target target) {
+        target.candidatesTruncated = true;
+        report.diagnostic("SELECTOR_CANDIDATE_LIMIT", m.id, "Candidate list truncated after " + options.maxSelectorCandidates + "; absence of overlap is not conclusive", false);
     }
     private TargetKey key(String loader, String targetNamespace, String owner, String name, String descriptor) {
         String profile = (options.loader.equals("auto") ? loader : options.loader) + ":" + options.loaderVersion;
         return new TargetKey(options.gameVersion, profile, targetNamespace, owner, name, descriptor);
     }
     private String reference(MixinConfig config, Modification m, String raw) {
-        if (config == null || config.references.isEmpty() || !Util.bool(m.options.get("remap"), true)) return raw;
+        return reference(config,m,raw,Util.bool(m.options.get("remap"),true));
+    }
+    private String reference(MixinConfig config, Modification m, String raw, boolean enabled) {
+        if (config == null || config.references.isEmpty() || !enabled) return raw;
         Map<String, Object> context = Util.map(config.references.get("mappings"));
         if (options.refmapContext != null) {
             Map<String, Object> selected = Util.map(Util.map(config.references.get("data")).get(options.refmapContext));

@@ -6,6 +6,7 @@ import io.github.rs0325.mixinscope.model.Model.*;
 import io.github.rs0325.mixinscope.parser.MixinParser;
 import io.github.rs0325.mixinscope.resolver.TargetResolver;
 import io.github.rs0325.mixinscope.rules.RiskRules;
+import io.github.rs0325.mixinscope.rules.FindingGroups;
 import java.util.*;
 
 public final class Scanner {
@@ -14,7 +15,9 @@ public final class Scanner {
         options.startBudget();
         report.environment.put("minecraftVersion", options.gameVersion); report.environment.put("loader", options.loader);
         report.environment.put("loaderVersion", options.loaderVersion); report.environment.put("mixinVersion", options.mixinVersion);
+        report.environment.put("mixinExtrasVersion", options.mixinExtrasVersion);
         report.environment.put("metadataProfile", options.metadataProfile);
+        if(options.metadataProfile.equals("fml-12.0"))report.assumptions.add("fml-12.0 explicitly declares FML source snapshot bcbdb3520249deba18d92de2fcbdcee550c75233 with sponge-mixin 0.17.1+mixin.0.8.7; installed/custom runtime dependencies are not inspected.");
         report.environment.put("inputNamespace", options.namespace); report.environment.put("side", options.side);
         report.environment.put("targetJava", options.targetJava);
         report.assumptions.add("Static analysis only: mods, Mixin plugins and transformers are never executed.");
@@ -42,6 +45,7 @@ public final class Scanner {
             if (m.targets.isEmpty()) c.unresolvedTargets++;
             for (Target t : m.targets) { if (t.resolution == Resolution.UNRESOLVED) c.unresolvedTargets++; if (t.resolution == Resolution.AMBIGUOUS) c.ambiguousTargets++; }
         }
+        FindingGroups.refresh(report);
         return report;
     }
 }

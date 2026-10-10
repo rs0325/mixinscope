@@ -31,6 +31,7 @@ public final class Main implements Runnable {
         @Option(names="--metadata-profile", defaultValue="auto", description="auto or fml-12.0 (explicit requiredMods/behaviorVersion profile).") String metadataProfile;
         @Option(names="--minecraft-version", defaultValue="unknown") String gameVersion;
         @Option(names="--mixin-version", defaultValue="unknown") String mixinVersion;
+        @Option(names="--mixinextras-version", defaultValue="unknown", description="Declared MixinExtras version; verified profiles: 0.3.2, 0.4.1, 0.5.0.") String mixinExtrasVersion;
         @Option(names="--side", defaultValue="both", description="Physical client, dedicated server (server), or both scenarios.") String side;
         @Option(names="--input-namespace", defaultValue="unknown") String namespace;
         @Option(names="--output-namespace") String outputNamespace;
@@ -52,6 +53,7 @@ public final class Main implements Runnable {
         @Option(names="--baseline") Path baseline;
         @Option(names="--date", description="Suppression evaluation date, YYYY-MM-DD; default is current UTC date.") String date;
         @Option(names="--max-pairs", defaultValue="100000") int maxPairs;
+        @Option(names="--max-selector-candidates", defaultValue="1000") int maxSelectorCandidates;
         @Option(names="--max-entry-mib", defaultValue="16") long maxEntry;
         @Option(names="--max-total-mib", defaultValue="256") long maxTotal;
         @Option(names="--max-archive-mib", defaultValue="128") long maxArchive;
@@ -63,10 +65,11 @@ public final class Main implements Runnable {
             validate();
             ScanOptions options = new ScanOptions(); options.inputs = inputs; options.loader = loader; options.loaderVersion = loaderVersion;
             options.metadataProfile = metadataProfile;
-            options.gameVersion = gameVersion; options.mixinVersion = mixinVersion; options.side = side; options.namespace = namespace;
+            options.gameVersion = gameVersion; options.mixinVersion = mixinVersion; options.mixinExtrasVersion = mixinExtrasVersion; options.side = side; options.namespace = namespace;
             options.outputNamespace = outputNamespace; options.gameNamespace = gameNamespace; options.gameJar = gameJar; options.classpath = classpath;
             options.mappings = mappings; options.mappingGameVersion = mappingGameVersion; options.refmapContext = refmapContext;
             options.targetJava = targetJava; options.maxPairs = maxPairs; options.maxEntry = maxEntry << 20; options.maxTotal = maxTotal << 20;
+            options.maxSelectorCandidates = maxSelectorCandidates;
             options.maxArchive = maxArchive << 20; options.maxDepth = maxDepth; options.maxEntries = maxEntries; options.maxRatio = maxRatio; options.timeoutSeconds = timeout;
             Report report = new io.github.rs0325.mixinscope.core.Scanner().scan(options);
             try {
@@ -102,7 +105,7 @@ public final class Main implements Runnable {
             if (!Set.of("client", "server", "both").contains(side)) invalid("Unknown physical side");
             if (!Set.of("text", "json", "html").contains(format)) invalid("Format must be text, json or html");
             if (!Set.of("auto", "fml-12.0").contains(metadataProfile)) invalid("Unknown metadata profile");
-            if (maxPairs < 0 || maxDepth < 0 || maxEntries < 1 || maxRatio < 1 || targetJava < 8 || maxEntry < 1 || maxArchive < 1 || maxTotal < 1 ||
+            if (maxPairs < 0 || maxSelectorCandidates < 1 || maxSelectorCandidates > 100_000 || maxDepth < 0 || maxEntries < 1 || maxRatio < 1 || targetJava < 8 || maxEntry < 1 || maxArchive < 1 || maxTotal < 1 ||
                     maxEntry > 4096 || maxArchive > 4096 || maxTotal > 8192 || timeout < 1 || timeout > 86400) invalid("Invalid resource limits");
         }
         private void invalid(String reason) { throw new ParameterException(spec.commandLine(), reason); }

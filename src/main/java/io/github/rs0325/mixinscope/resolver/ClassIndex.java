@@ -42,11 +42,24 @@ public final class ClassIndex {
         List<Match> result = new ArrayList<>();
         String pattern = java.util.regex.Pattern.quote(name).replace("*", "\\E.*\\Q");
         for (MethodNode m : node.methods) if (m.name.matches(pattern) && (descriptor.isEmpty() || m.desc.equals(descriptor))) result.add(new Match(owner, m, hashes.get(owner)));
-        if (!result.isEmpty() || name.equals("<init>") || name.equals("<clinit>")) return result;
-        if (node.superName != null) result.addAll(find(node.superName, name, descriptor, seen));
-        if (result.isEmpty()) for (String iface : node.interfaces) result.addAll(find(iface, name, descriptor, seen));
+        if (name.equals("<init>") || name.equals("<clinit>")) return result;
+        Set<String> signatures = new HashSet<>();
+        for (Match match : result) signatures.add(match.method.name + match.method.desc);
+        List<Match> inherited = new ArrayList<>();
+        if (node.superName != null) inherited.addAll(find(node.superName, name, descriptor, new HashSet<>(seen)));
+        for (Match match : inherited) if (inheritable(match, owner) && !signatures.contains(match.method.name + match.method.desc)) result.add(match);
+        for (Match match : result) signatures.add(match.method.name + match.method.desc);
+        // Different interface declarations remain candidates unless a class declaration wins.
+        for (String iface : node.interfaces) for (Match match : find(iface, name, descriptor, new HashSet<>(seen)))
+            if ((match.method.access & (org.objectweb.asm.Opcodes.ACC_PRIVATE | org.objectweb.asm.Opcodes.ACC_STATIC)) == 0 && !signatures.contains(match.method.name + match.method.desc)) result.add(match);
         return result.stream().distinct().toList();
     }
+    private static boolean inheritable(Match match, String child) {
+        if (match.method.name.startsWith("<") || (match.method.access & org.objectweb.asm.Opcodes.ACC_PRIVATE) != 0) return false;
+        int visibility = org.objectweb.asm.Opcodes.ACC_PUBLIC | org.objectweb.asm.Opcodes.ACC_PROTECTED;
+        return (match.method.access & visibility) != 0 || packageName(match.owner).equals(packageName(child));
+    }
+    private static String packageName(String owner) { int slash=owner.lastIndexOf('/');return slash<0?"":owner.substring(0,slash); }
     public boolean hierarchyComplete(String owner) { return complete(owner, new HashSet<>()); }
     private boolean complete(String owner, Set<String> seen) {
         if (owner == null || owner.equals("java/lang/Object") || !seen.add(owner)) return true;

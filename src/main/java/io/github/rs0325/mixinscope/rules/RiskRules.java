@@ -5,7 +5,7 @@ import io.github.rs0325.mixinscope.model.Model.*;
 import java.util.*;
 
 public final class RiskRules {
-    private record Change(Modification modification, Target target) {}
+    private record Change(Modification modification, Target target, TargetKey indexedKey) {}
     private final ScanOptions options;
     private final Report report;
     private final Map<String, Artifact> artifacts = new HashMap<>();
@@ -16,13 +16,17 @@ public final class RiskRules {
     public void evaluate() {
         for (Modification m : report.modifications) {
             options.checkBudget();
-            if (m.referenceOnly || m.applicability == Applicability.INELIGIBLE) continue;
-            for (Target t : m.targets) if (t.key != null && t.existence != Existence.MISSING) {
-                String key = key(t.key);
-                List<Change> bucket = index.computeIfAbsent(key, k -> new ArrayList<>());
-                if (indexedModifications.computeIfAbsent(key, k -> new HashSet<>()).add(m.id)) bucket.add(new Change(m, t));
+            if (m.referenceOnly) continue;
+            for (Target t : m.targets) if (t.key != null) {
+              List<TargetKey> keys = new ArrayList<>(); keys.add(t.key); keys.addAll(t.candidateKeys);
+              for (TargetKey indexedKey : keys.stream().distinct().toList()) {
+                String key = key(indexedKey);
                 report.targetIndex.computeIfAbsent(key, k -> new ArrayList<>()).add(m.id);
                 for (String mod : modIds(m)) report.modIndex.computeIfAbsent(mod, k -> new ArrayList<>()).add(key);
+                if (m.applicability == Applicability.INELIGIBLE || t.existence == Existence.MISSING) continue;
+                List<Change> bucket = index.computeIfAbsent(key, k -> new ArrayList<>());
+                if (indexedModifications.computeIfAbsent(key, k -> new HashSet<>()).add(m.id)) bucket.add(new Change(m, t, indexedKey));
+              }
             }
         }
         long compared = 0, skipped = 0;
@@ -52,7 +56,8 @@ public final class RiskRules {
     private void pair(Change a, Change b, Set<String> sides) {
         Modification left = a.modification, right = b.modification;
         boolean resolved = a.target.resolution == Resolution.RESOLVED && b.target.resolution == Resolution.RESOLVED;
-        finding("MS001", Severity.LOW, a, b, sides, "Multiple modifications declare the same target; overlap alone does not establish incompatibility.");
+        finding("MS001", Severity.LOW, a, b, sides, resolved ? "Multiple modifications declare the same target; overlap alone does not establish incompatibility." :
+                "Possible overlap through an ambiguous selector or static declaration candidate; method identity is not uniquely resolved.");
         // Incomplete/ambiguous selectors are candidate inventory, not strong replacement claims.
         if (!resolved) return;
         if (left.kind.equals("Overwrite") && right.kind.equals("Overwrite"))
@@ -75,16 +80,20 @@ public final class RiskRules {
     private static boolean sameOperand(Modification a, Modification b) {
         if ((a.kind.equals("ModifyArgs") || b.kind.equals("ModifyArgs")) && (a.kind.equals("ModifyArg") || b.kind.equals("ModifyArg"))) return true;
         if (!a.kind.equals(b.kind)) return false;
+        if (a.kind.equals("ModifyArg")) {
+            int ai = Util.integer(a.options.get("index"), -1), bi = Util.integer(b.options.get("index"), -1);
+            return ai < 0 || bi < 0 || ai == bi;
+        }
         for (String key : List.of("index", "ordinal", "argsOnly", "constant")) if (!Objects.equals(a.options.get(key), b.options.get(key))) return false;
         return true;
     }
     private static boolean samePoint(Change a, Change b) {
         if (a.target.instructionsVerified && b.target.instructionsVerified)
             return !Collections.disjoint(new HashSet<>(a.target.instructions), new HashSet<>(b.target.instructions));
-        if (a.modification.at.isEmpty() || b.modification.at.isEmpty()) return false;
+        if (!a.modification.pointCandidatesNormalized || !b.modification.pointCandidatesNormalized || a.modification.normalizedAt.isEmpty() || b.modification.normalizedAt.isEmpty()) return false;
         // Matching slice IDs alone cannot establish matching boundaries in JAR-only mode.
-        if (!Objects.equals(a.modification.options.get("slice"), b.modification.options.get("slice"))) return false;
-        for (Map<String, Object> x : a.modification.at) for (Map<String, Object> y : b.modification.at)
+        if (!Objects.equals(a.modification.normalizedSlices, b.modification.normalizedSlices)) return false;
+        for (Map<String, Object> x : a.modification.normalizedAt) for (Map<String, Object> y : b.modification.normalizedAt)
             if (normalizedAt(x).equals(normalizedAt(y))) return true;
         return false;
     }
@@ -95,7 +104,8 @@ public final class RiskRules {
         return result;
     }
     private void finding(String rule, Severity severity, Change a, Change b, Set<String> sides, String reason) {
-        Finding f = new Finding(); f.rule = rule; f.severity = severity; f.reason = reason; f.target = a.target.key;
+        Finding f = new Finding(); f.rule = rule; f.severity = severity; f.reason = reason; f.target = a.indexedKey;
+        if (rule.equals("MS001")) f.ruleVersion = "2";
         f.category = a.modification.artifact.equals(b.modification.artifact) ? "WITHIN_ARTIFACT" :
                 !Collections.disjoint(modIds(a.modification), modIds(b.modification)) ? "ALTERNATIVE_MOD_CANDIDATES" : "BETWEEN_MODS";
         f.modifications = List.of(a.modification.id, b.modification.id).stream().sorted().toList();
@@ -106,6 +116,11 @@ public final class RiskRules {
         f.confidence = !resolved || conditional || f.target.namespace().equals("unknown") ? Confidence.LOW :
                 rule.equals("MS003") || rule.equals("MS006") || rule.equals("MS008") ?
                         a.target.instructionsVerified && b.target.instructionsVerified ? Confidence.HIGH : Confidence.MEDIUM : Confidence.HIGH;
+        if (rule.equals("MS006") && f.confidence == Confidence.HIGH &&
+                (!a.modification.kind.equals("ModifyArg") || !b.modification.kind.equals("ModifyArg") ||
+                 Util.integer(a.modification.options.get("index"), -1) < 0 || Util.integer(b.modification.options.get("index"), -1) < 0))
+            f.confidence = Confidence.MEDIUM;
+        if (rule.equals("MS006")) f.limitations.add("Instruction overlap does not prove implicit argument, local-variable, or handler-type identity.");
         for (Change change : List.of(a, b)) {
             Modification m = change.modification;
             f.evidence.add(m.mixin + "." + m.handler + m.handlerDescriptor + " @" + m.kind + " selectors=" + m.selectors + " defaults=" + m.defaults + " at=" + m.at);

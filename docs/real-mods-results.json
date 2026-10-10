@@ -1,0 +1,217 @@
+{
+  "scope": "Static JAR reading only; no Minecraft, downloaded Mods or their plugins executed",
+  "generatedAtUTC": "2026-10-10T03:15:29Z",
+  "manifestSha256": "0e03f09f2fd4c8500a8aa253c3d35f2c10d02e15007eeb6659d9c4e8a42db1b7",
+  "schemaVersion": "1.1",
+  "rulesetVersion": "2",
+  "toolVersion": "0.1.0-SNAPSHOT",
+  "environment": {
+    "os": "macOS-15.7.7-arm64-arm-64bit",
+    "python": "3.12.4",
+    "architecture": "arm64"
+  },
+  "packs": [
+    {
+      "pack": "fabric-baseline-1.21.1",
+      "seconds": 1.231,
+      "exit": 0,
+      "artifacts": 9,
+      "configs": 14,
+      "modifications": 789,
+      "findings": 270,
+      "targetGroups": 82,
+      "partial": false,
+      "kinds": {
+        "Accessor": 54,
+        "Inject": 304,
+        "Invoker": 8,
+        "ModifyArg": 15,
+        "ModifyConstant": 3,
+        "ModifyExpressionValue": 1,
+        "ModifyReturnValue": 2,
+        "ModifyVariable": 18,
+        "Overwrite": 138,
+        "Redirect": 135,
+        "Shadow": 99,
+        "WrapOperation": 11,
+        "WrapWithCondition": 1
+      },
+      "diagnostics": {
+        "EXTRAS_LOCAL_UNSUPPORTED": 19,
+        "METHOD_MERGE_UNSUPPORTED": 407,
+        "NESTED_SELECTION_UNKNOWN": 6,
+        "PLUGIN_NOT_EXECUTED": 4,
+        "TARGET_AMBIGUOUS": 15,
+        "TRANSFORMER_NOT_ANALYZED": 7,
+        "UNREGISTERED_CONFIG_CANDIDATE": 1
+      }
+    },
+    {
+      "pack": "fabric-1.21.1",
+      "seconds": 1.465,
+      "exit": 0,
+      "artifacts": 9,
+      "configs": 14,
+      "modifications": 789,
+      "findings": 270,
+      "targetGroups": 82,
+      "partial": false,
+      "kinds": {
+        "Accessor": 54,
+        "Inject": 304,
+        "Invoker": 8,
+        "ModifyArg": 15,
+        "ModifyConstant": 3,
+        "ModifyExpressionValue": 1,
+        "ModifyReturnValue": 2,
+        "ModifyVariable": 18,
+        "Overwrite": 138,
+        "Redirect": 134,
+        "Shadow": 99,
+        "WrapOperation": 12,
+        "WrapWithCondition": 1
+      },
+      "diagnostics": {
+        "EXTRAS_LOCAL_UNSUPPORTED": 19,
+        "METHOD_MERGE_UNSUPPORTED": 407,
+        "NESTED_SELECTION_UNKNOWN": 6,
+        "PLUGIN_NOT_EXECUTED": 4,
+        "TARGET_AMBIGUOUS": 15,
+        "TRANSFORMER_NOT_ANALYZED": 7,
+        "UNREGISTERED_CONFIG_CANDIDATE": 1
+      },
+      "baseline": {
+        "artifactsChanged": true,
+        "comparable": false,
+        "environmentChanged": false,
+        "new": 3,
+        "resolved": 0,
+        "rulesetChanged": false,
+        "schemaChanged": false,
+        "unchanged": 267,
+        "unverifiedDisappearance": 3
+      }
+    },
+    {
+      "pack": "fabric-ferrite-dev-1.21.1",
+      "seconds": 0.822,
+      "exit": 0,
+      "artifacts": 1,
+      "configs": 10,
+      "modifications": 49,
+      "findings": 5,
+      "targetGroups": 5,
+      "partial": false,
+      "kinds": {
+        "Accessor": 30,
+        "Inject": 8,
+        "Overwrite": 6,
+        "Redirect": 4,
+        "Shadow": 1
+      },
+      "diagnostics": {
+        "METHOD_MERGE_UNSUPPORTED": 16,
+        "NAMESPACE_UNKNOWN": 1,
+        "PLUGIN_NOT_EXECUTED": 8,
+        "SELECTOR_UNSUPPORTED": 1,
+        "TARGET_AMBIGUOUS": 9
+      }
+    },
+    {
+      "pack": "forge-1.20.1",
+      "seconds": 1.401,
+      "exit": 0,
+      "artifacts": 3,
+      "configs": 3,
+      "modifications": 241,
+      "findings": 92,
+      "targetGroups": 36,
+      "partial": false,
+      "kinds": {
+        "Accessor": 2,
+        "Inject": 92,
+        "ModifyArg": 15,
+        "ModifyExpressionValue": 4,
+        "ModifyVariable": 7,
+        "Overwrite": 27,
+        "Redirect": 62,
+        "Shadow": 27,
+        "WrapOperation": 5
+      },
+      "diagnostics": {
+        "EXTRAS_LOCAL_UNSUPPORTED": 3,
+        "EXTRAS_VERSION_UNVERIFIED": 1,
+        "LOADER_MISMATCH": 1,
+        "LOADER_UNKNOWN": 1,
+        "METHOD_MERGE_UNSUPPORTED": 78,
+        "MIXIN_VERSION_ASSUMED": 1,
+        "NESTED_SELECTION_UNKNOWN": 2,
+        "PLUGIN_NOT_EXECUTED": 3,
+        "TARGET_AMBIGUOUS": 65,
+        "TRANSFORMER_NOT_ANALYZED": 1
+      }
+    },
+    {
+      "pack": "neoforge-1.21.1",
+      "seconds": 0.915,
+      "exit": 0,
+      "artifacts": 1,
+      "configs": 9,
+      "modifications": 48,
+      "findings": 5,
+      "targetGroups": 5,
+      "partial": false,
+      "kinds": {
+        "Accessor": 30,
+        "Inject": 7,
+        "Overwrite": 6,
+        "Redirect": 4,
+        "Shadow": 1
+      },
+      "diagnostics": {
+        "METHOD_MERGE_UNSUPPORTED": 16,
+        "MIXIN_VERSION_ASSUMED": 1,
+        "PLUGIN_NOT_EXECUTED": 8,
+        "REFMAP_MISSING": 1,
+        "SELECTOR_UNSUPPORTED": 1,
+        "TARGET_AMBIGUOUS": 15
+      }
+    },
+    {
+      "pack": "quilt-1.20.1",
+      "seconds": 1.547,
+      "exit": 0,
+      "artifacts": 88,
+      "configs": 89,
+      "modifications": 846,
+      "findings": 377,
+      "targetGroups": 95,
+      "partial": false,
+      "kinds": {
+        "Accessor": 169,
+        "Inject": 445,
+        "Invoker": 19,
+        "ModifyArg": 25,
+        "ModifyArgs": 1,
+        "ModifyConstant": 6,
+        "ModifyExpressionValue": 2,
+        "ModifyVariable": 32,
+        "Overwrite": 7,
+        "Redirect": 72,
+        "Shadow": 57,
+        "WrapOperation": 11
+      },
+      "diagnostics": {
+        "EXTRAS_LOCAL_UNSUPPORTED": 2,
+        "EXTRAS_VERSION_UNVERIFIED": 1,
+        "METHOD_MERGE_UNSUPPORTED": 349,
+        "MIXIN_VERSION_ASSUMED": 1,
+        "NESTED_SELECTION_UNKNOWN": 87,
+        "PLUGIN_NOT_EXECUTED": 1,
+        "TARGET_AMBIGUOUS": 9,
+        "TRANSFORMER_NOT_ANALYZED": 30,
+        "WRAPPER_CALL_UNVERIFIED": 4
+      }
+    }
+  ]
+}

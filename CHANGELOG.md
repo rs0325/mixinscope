@@ -1,8 +1,19 @@
 # Changelog
 
-## 0.1.0-alpha.1 — 公開準備中
+## 0.1.0
 
-最初のプレリリース候補。Minecraft Mod JARのMixin宣言と潜在的な互換性リスクを、ゲームを起動せずに調査するJava 21 CLI。
+現行の静的解析CLIを初回正式版として配布。report schema 1.1 / ruleset 4を維持し、alpha版から判定規則・CLIオプション・保存形式は変更しない。
+
+- VERSIONと配布検証を正式版番号へ対応。
+- README・利用手順・公開手順を正式版へ揃え、alpha版の公開準備中という記載を修正。
+- 固定Lithium / ModernFixの専用server 4構成で、HIGH候補3件の適用・スキップ・plugin非選択とNBT・chunk操作を照合。
+- findingにならない通常メソッドmerge競合、共通world設定警告、未確認の意味的互換性を記録。
+
+正式版は記載した静的解析の範囲で配布する。Modpack全体の互換性・クラッシュ予測・precision / recallを保証しない。詳細は[実測記録](docs/minecraft-runtime-validation.md)。
+
+## 0.1.0-alpha.1 — 2026-10-10
+
+最初のプレリリース。Minecraft Mod JARのMixin宣言と潜在的な互換性リスクを、ゲームを起動せずに調査するJava 21 CLI。
 
 - Fabric / Forge / NeoForge / Quiltの登録metadataとnested JARを制限付きで解析。
 - 標準Mixinと固定MixinExtras profile、MS001–MS008の根拠・risk・confidenceを報告。

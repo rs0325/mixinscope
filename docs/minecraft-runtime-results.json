@@ -1,0 +1,450 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-11",
+  "purpose": "固定2 ModのSERVER対照。互換性・クラッシュ予測の精度指標ではない。",
+  "environment": {
+    "minecraft": "1.21.1",
+    "loader": "Fabric 0.16.14",
+    "mixin": "0.8.7",
+    "mixinArtifact": "0.15.5+mixin.0.8.7",
+    "mixinExtras": "0.4.1",
+    "java": "Temurin 21.0.9+10-LTS",
+    "os": "macOS-15.7.7-arm64-arm-64bit",
+    "side": "SERVER",
+    "heapMaximumMiB": 2048,
+    "bind": "127.0.0.1:25571",
+    "installer": "1.0.3",
+    "launcherSha256": "44f3e6cfbefce7bc8761c3b45293d99edf2677ed947021a5ca6481907430c5aa",
+    "minecraftServerSha256": "e3bc55693e93cda0188f2e60aea28113fc647c5e85a15fa3d1b347349231b4bb",
+    "mods": [
+      {
+        "project": "lithium",
+        "versionId": "9x0igjLz",
+        "version": "mc1.21.1-0.13.1",
+        "filename": "lithium-fabric-mc1.21.1-0.13.1.jar",
+        "sha256": "1f4385a8ee2c04e46fdacdfa3f751d17f53d1f4c2332f88942308e6dc2b694f6",
+        "sha1": "3dde05dcd5afab3ff6ca77c08f4c82d3a064f3c6",
+        "sha512": "4250a630d43492da35c4c197ae43082186938fdcb42bafcb6ccad925b79f583abdfdc17ce792c6c6686883f7f109219baecb4906a65d524026d4e288bfbaf146",
+        "size": 752804,
+        "source": "https://modrinth.com/mod/lithium/version/9x0igjLz",
+        "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/9x0igjLz/lithium-fabric-mc1.21.1-0.13.1.jar"
+      },
+      {
+        "project": "modernfix",
+        "versionId": "qO3cN8gB",
+        "version": "5.19.5+mc1.21.1",
+        "filename": "modernfix-fabric-5.19.5+mc1.21.1.jar",
+        "sha256": "86b8b4a7e6cb2a24e2ef618343ebf8efa05dced0b43decb042130f431c6786aa",
+        "sha1": "0baaf6b7cf92d502c3d81205ef7f3eb2d4f30f32",
+        "sha512": "840c1f0bc2d4b0766c91841ed46d98ef768eb2a4792501660b8ebd8ec59d4b9e0dd96b0ec48558c58a3bf91035ec09d87b386484ff24a15c191372e4ec503579",
+        "size": 422522,
+        "source": "https://modrinth.com/mod/modernfix/version/qO3cN8gB",
+        "url": "https://cdn.modrinth.com/data/nmDcB62a/versions/qO3cN8gB/modernfix-fabric-5.19.5%2Bmc1.21.1.jar"
+      }
+    ]
+  },
+  "analysis": {
+    "commit": "ab82a531cfff37cbb3a91f4bec53fe54b5897e2b",
+    "toolVersion": "0.1.0-alpha.1",
+    "schemaVersion": "1.1",
+    "rulesetVersion": "4",
+    "side": "server",
+    "inputNamespace": "intermediary",
+    "staticReportSha256": "988d938865011f8703923d1014e60b3bc27f60e972674ab036d40d02bf10e58e",
+    "findings": 175,
+    "betweenMods": 26,
+    "coverage": {
+      "ambiguousTargets": 11,
+      "artifacts": 2,
+      "failedArtifacts": 0,
+      "modifications": 615,
+      "partial": false,
+      "skippedPairs": 0,
+      "skippedTargets": 0,
+      "suppressedFindings": 0,
+      "unknownApplicability": 615,
+      "unresolvedTargets": 0
+    },
+    "diagnostics": 454
+  },
+  "commands": [
+    "gamerule doDaylightCycle false",
+    "gamerule doWeatherCycle false",
+    "forceload add 0 0 16 16",
+    "setblock 0 64 0 minecraft:chest",
+    "data merge block 0 64 0 {Items:[{Slot:0b,id:\"minecraft:stone\",count:3}]}",
+    "clone 0 64 0 0 64 0 1 64 0 replace force",
+    "data get block 1 64 0 Items",
+    "execute if data block 1 64 0 Items[{id:\"minecraft:stone\",count:3}] run say MS19_NBT_OK",
+    "forceload query",
+    "save-all flush",
+    "stop"
+  ],
+  "runs": [
+    {
+      "profile": "fabric",
+      "ready": true,
+      "exitCode": 0,
+      "elapsedSeconds": 9.53,
+      "nbtMarker": true,
+      "saved": true,
+      "stopped": true,
+      "logSha256": "4eb6d8b97da9d0d78546cbf9ca7f55a953e63dddd06eb8b904bc9bdb84647b42",
+      "evidence": [
+        {
+          "line": 13,
+          "text": "[16:12:44] [main/ERROR]: No key layers in MapLike[{}]"
+        },
+        {
+          "line": 26,
+          "text": "[16:12:46] [Server thread/INFO]: Done (0.599s)! For help, type \"help\""
+        },
+        {
+          "line": 33,
+          "text": "[16:12:46] [Server thread/INFO]: 1, 64, 0 has the following block data: [{count: 3, Slot: 0b, id: \"minecraft:stone\"}]"
+        },
+        {
+          "line": 34,
+          "text": "[16:12:46] [Server thread/INFO]: [Not Secure] [Server] MS19_NBT_OK"
+        },
+        {
+          "line": 35,
+          "text": "[16:12:46] [Server thread/INFO]: 4 force loaded chunks were found in minecraft:overworld at: [0, 0], [1, 0], [0, 1], [1, 1]"
+        },
+        {
+          "line": 41,
+          "text": "[16:12:46] [Server thread/INFO]: Saved the game"
+        },
+        {
+          "line": 43,
+          "text": "[16:12:46] [Server thread/INFO]: Stopping server"
+        }
+      ],
+      "configs": {
+        "server.properties": "3cbfda5e0eca54912a56a047471cdfcf65917a7e5f0cf5819fcf5af3eda4f646"
+      },
+      "exportedTargets": {}
+    },
+    {
+      "profile": "lithium",
+      "ready": true,
+      "exitCode": 0,
+      "elapsedSeconds": 17.0,
+      "nbtMarker": true,
+      "saved": true,
+      "stopped": true,
+      "logSha256": "922ca9d6512380fb7ecdc72c130e67497b9dfb8230c341ac742fbdb25bbe576c",
+      "evidence": [
+        {
+          "line": 203,
+          "text": "[16:13:01] [main/ERROR]: No key layers in MapLike[{}]"
+        },
+        {
+          "line": 269,
+          "text": "[16:13:03] [Server thread/INFO]: Done (0.775s)! For help, type \"help\""
+        },
+        {
+          "line": 282,
+          "text": "[16:13:03] [Server thread/INFO]: 1, 64, 0 has the following block data: [{count: 3, Slot: 0b, id: \"minecraft:stone\"}]"
+        },
+        {
+          "line": 283,
+          "text": "[16:13:03] [Server thread/INFO]: [Not Secure] [Server] MS19_NBT_OK"
+        },
+        {
+          "line": 284,
+          "text": "[16:13:03] [Server thread/INFO]: 4 force loaded chunks were found in minecraft:overworld at: [0, 0], [1, 0], [0, 1], [1, 1]"
+        },
+        {
+          "line": 290,
+          "text": "[16:13:03] [Server thread/INFO]: Saved the game"
+        },
+        {
+          "line": 292,
+          "text": "[16:13:03] [Server thread/INFO]: Stopping server"
+        }
+      ],
+      "configs": {
+        "server.properties": "076c192a5410d78394de14c786be558dd9bd4036fc223f60357e8881d4d1de86",
+        "lithium.properties": "76765e8e5ff8e927d80beb0739aababcf36e7babfd94262f2afece256cc5cd2e"
+      },
+      "exportedTargets": {
+        "class_1959": "57eb22766b203a2681d3ce9a61bba1d7df98b1f6ff8965f72046a60cb200a358",
+        "class_2487": "3a20701b88381c071f7c05da3458e0226f9b6a41c7251afe9933ea1d6ee91fdc",
+        "class_3215": "fc1808b80f359209d61b85f8a993563785e826c76e59829c3206eaf9553f499c"
+      }
+    },
+    {
+      "profile": "modernfix",
+      "ready": true,
+      "exitCode": 0,
+      "elapsedSeconds": 12.12,
+      "nbtMarker": true,
+      "saved": true,
+      "stopped": true,
+      "logSha256": "9b01f5afaf5605b403ed367bdebbfef0b220764cb0884f7ed31913eb75a7928e",
+      "evidence": [
+        {
+          "line": 54,
+          "text": "[16:13:13] [main/ERROR]: No key layers in MapLike[{}]"
+        },
+        {
+          "line": 74,
+          "text": "[16:13:15] [Server thread/INFO]: Done (0.664s)! For help, type \"help\""
+        },
+        {
+          "line": 82,
+          "text": "[16:13:15] [Server thread/INFO]: 1, 64, 0 has the following block data: [{count: 3, Slot: 0b, id: \"minecraft:stone\"}]"
+        },
+        {
+          "line": 83,
+          "text": "[16:13:15] [Server thread/INFO]: [Not Secure] [Server] MS19_NBT_OK"
+        },
+        {
+          "line": 84,
+          "text": "[16:13:15] [Server thread/INFO]: 4 force loaded chunks were found in minecraft:overworld at: [0, 0], [1, 0], [0, 1], [1, 1]"
+        },
+        {
+          "line": 90,
+          "text": "[16:13:15] [Server thread/INFO]: Saved the game"
+        },
+        {
+          "line": 92,
+          "text": "[16:13:15] [Server thread/INFO]: Stopping server"
+        }
+      ],
+      "configs": {
+        "server.properties": "f8d5ce7c53e740a114cae48f3a4b0fd5d1c5b10aa628eca2a116f309d3f460ca",
+        "modernfix-mixins.properties": "ee70e55e812f3b46f2db0e16cd746a8996b017e2d92b40fc5ff26cc93c93a237"
+      },
+      "exportedTargets": {
+        "class_1959": "ec22bd20475a8ea06fa6a81601ed00ffb6310a1783f6b9ad02a70d905aa0438e",
+        "class_2487": "82250be9303d433e36c8046b8c297ee04bdc010c03cb26047ac40c1f46f47e58"
+      }
+    },
+    {
+      "profile": "combined",
+      "ready": true,
+      "exitCode": 0,
+      "elapsedSeconds": 12.95,
+      "nbtMarker": true,
+      "saved": true,
+      "stopped": true,
+      "logSha256": "afa096a200a3975ced8e7796b5407a5e5c1ab217aebb949dbd62c21cee51d804",
+      "evidence": [
+        {
+          "line": 230,
+          "text": "[16:13:27] [main/ERROR]: No key layers in MapLike[{}]"
+        },
+        {
+          "line": 319,
+          "text": "[16:13:28] [Server thread/INFO]: Done (0.703s)! For help, type \"help\""
+        },
+        {
+          "line": 333,
+          "text": "[16:13:28] [Server thread/INFO]: 1, 64, 0 has the following block data: [{count: 3, Slot: 0b, id: \"minecraft:stone\"}]"
+        },
+        {
+          "line": 334,
+          "text": "[16:13:28] [Server thread/INFO]: [Not Secure] [Server] MS19_NBT_OK"
+        },
+        {
+          "line": 335,
+          "text": "[16:13:28] [Server thread/INFO]: 4 force loaded chunks were found in minecraft:overworld at: [0, 0], [1, 0], [0, 1], [1, 1]"
+        },
+        {
+          "line": 341,
+          "text": "[16:13:28] [Server thread/INFO]: Saved the game"
+        },
+        {
+          "line": 343,
+          "text": "[16:13:28] [Server thread/INFO]: Stopping server"
+        }
+      ],
+      "configs": {
+        "server.properties": "725f142231a572ee93ce354c72d6a665ab80cd789b7eaff0e19eabdb05cbe1a2",
+        "modernfix-mixins.properties": "ee70e55e812f3b46f2db0e16cd746a8996b017e2d92b40fc5ff26cc93c93a237",
+        "lithium.properties": "76765e8e5ff8e927d80beb0739aababcf36e7babfd94262f2afece256cc5cd2e"
+      },
+      "exportedTargets": {
+        "class_1959": "7c1c9a6b91e54870f87e93c5a49c296301cc2b1e4c5bf20e7e3ece061e8bc7b3",
+        "class_2487": "9e77afa52e79463b2e7d7dd43a697b18b81722142076956b3d1b0ebb248d8c73",
+        "class_3215": "b36d3152cbdf34ff036c730075db34dc6f51ec0031e999584614c3cf7031acbd"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "findingId": "926b470667b34d173d6603dbb95b5308f32e959663f8171209f069fc7392977a",
+      "rule": "MS002",
+      "severity": "HIGH",
+      "confidence": "LOW",
+      "target": {
+        "descriptor": "(Lnet/minecraft/class_2338;)F",
+        "gameVersion": "1.21.1",
+        "loaderProfile": "fabric:0.16.14",
+        "name": "method_21740",
+        "namespace": "intermediary",
+        "owner": "net/minecraft/class_1959"
+      },
+      "scenarios": [
+        "server"
+      ],
+      "staticCondition": "固定JARの宣言と対象signatureが一致。plugin実行条件は静的解析対象外。",
+      "combinedApplication": "LithiumのOverwrite採用・ModernFixのOverwriteスキップ",
+      "interpretation": "変換後メソッドのMixinMergedはLithium。ModernFix単独ではModernFix。温度計算の行動差は未確認。",
+      "behavior": "この対照操作で差を観測しなかった。対象ごとの意味的互換性は不明。",
+      "perProfileApplication": {
+        "fabric": "対象Modなし",
+        "lithium": "対象Overwrite採用",
+        "modernfix": "対象Overwrite採用",
+        "combined": "LithiumのOverwrite採用・ModernFixのOverwriteスキップ"
+      },
+      "unconfirmed": [
+        "対象メソッドの実行回数",
+        "意味的互換性"
+      ]
+    },
+    {
+      "findingId": "215e68080e020bc60185922c3d2e110986f99d59af3c9e28f9b3f18010887b3c",
+      "rule": "MS004",
+      "severity": "HIGH",
+      "confidence": "LOW",
+      "target": {
+        "descriptor": "()Lnet/minecraft/class_2487;",
+        "gameVersion": "1.21.1",
+        "loaderProfile": "fabric:0.16.14",
+        "name": "method_10553",
+        "namespace": "intermediary",
+        "owner": "net/minecraft/class_2487"
+      },
+      "scenarios": [
+        "server"
+      ],
+      "staticCondition": "固定JARの宣言と対象signatureが一致。plugin実行条件は静的解析対象外。",
+      "combinedApplication": "両方を適用確認",
+      "interpretation": "変換後copyはLithium由来で、ModernFix copyEfficientの呼び出し・キャンセル分岐を含む。NBT複製の観測値は4構成で同じ。",
+      "behavior": "この対照操作で差を観測しなかった。対象ごとの意味的互換性は不明。",
+      "perProfileApplication": {
+        "fabric": "対象Modなし",
+        "lithium": "対象Overwrite採用",
+        "modernfix": "HEAD Injectのhandler呼出しとキャンセル分岐を確認",
+        "combined": "両方を適用確認"
+      },
+      "unconfirmed": [
+        "対象メソッドの実行回数",
+        "意味的互換性"
+      ]
+    },
+    {
+      "findingId": "f4f8429bbaeb23129f6b7e54b1ba0d70aa0f15d299f40bab42fd1bea649b6ae1",
+      "rule": "MS004",
+      "severity": "HIGH",
+      "confidence": "LOW",
+      "target": {
+        "descriptor": "(IILnet/minecraft/class_2806;Z)Lnet/minecraft/class_2791;",
+        "gameVersion": "1.21.1",
+        "loaderProfile": "fabric:0.16.14",
+        "name": "method_12121",
+        "namespace": "intermediary",
+        "owner": "net/minecraft/class_3215"
+      },
+      "scenarios": [
+        "server"
+      ],
+      "staticCondition": "固定JARの宣言と対象signatureが一致。plugin実行条件は静的解析対象外。",
+      "combinedApplication": "Lithium適用確認・ModernFixは既定設定で非選択",
+      "interpretation": "ModernFixのstalled_chunk_load_detection=false。pluginは無効optionを拒否する。dead-server分岐の互換性は未確認。",
+      "behavior": "この対照操作で差を観測しなかった。対象ごとの意味的互換性は不明。",
+      "perProfileApplication": {
+        "fabric": "対象Modなし",
+        "lithium": "対象Overwrite採用",
+        "modernfix": "対象機能は既定false、pluginによる非選択",
+        "combined": "Lithium適用確認・ModernFixは既定設定で非選択"
+      },
+      "unconfirmed": [
+        "対象メソッドの実行回数",
+        "意味的互換性"
+      ]
+    }
+  ],
+  "additionalObservation": {
+    "findingId": null,
+    "method": "net/minecraft/class_4706.removeIf(Ljava/util/function/Predicate;)Z",
+    "classification": "既存rule範囲外の通常メソッドmerge競合",
+    "diagnostic": "METHOD_MERGE_UNSUPPORTED",
+    "description": "両Modの通常メソッドmergeはdiagnosticに残るがfindingにはならない。runtimeはModernFix側をskipした。全merge競合の検出を命題にすれば未検出例だが、既存rule対象の解析誤りとは区別する。"
+  },
+  "metrics": {
+    "precision": null,
+    "recall": null,
+    "reason": "HIGHを選んだ3候補だけを評価し、findingのないメソッドの独立した正解集合を作っていない。互換性や意味的干渉の正解判定も不足する。"
+  },
+  "excludedAttempt": {
+    "profile": "fabric-first",
+    "reason": "data mergeの先頭空白による入力ミス。対照から除外し、新規worldで再実行。",
+    "exitCode": 0,
+    "logSha256": "e8989641dd1c5319d122cc280b3930283ba4b4c311ffb52b93351418afb2d94b"
+  },
+  "limits": [
+    "client未検証",
+    "温度計算・dead-server分岐を直接呼んだ証拠なし",
+    "NBT・chunk操作の成功は全操作の互換性やhandler呼び出し回数を証明しない",
+    "各構成1回、追加対照1回。性能比較・長時間安定性は対象外",
+    "flatのgenerator-settings未指定で全構成にNo key layers in MapLike[{}]が出た。ワールド作成と操作は継続した。",
+    "未注釈メソッドmergeを含む全競合のrecallは不明"
+  ],
+  "applicationEvidence": [
+    {
+      "file": "combined/logs/latest.log",
+      "line": 29,
+      "text": "[16:13:22] [main/INFO]: Mixing alloc.nbt.NbtCompoundMixin from lithium.mixins.json into net.minecraft.class_2487"
+    },
+    {
+      "file": "combined/logs/latest.log",
+      "line": 31,
+      "text": "[16:13:22] [main/INFO]: Mixing perf.nbt_memory_usage.CompoundTagMixin from modernfix-common.mixins.json into net.minecraft.class_2487"
+    },
+    {
+      "file": "combined/logs/latest.log",
+      "line": 153,
+      "text": "[16:13:24] [main/INFO]: Mixing world.temperature_cache.BiomeMixin from lithium.mixins.json into net.minecraft.class_1959"
+    },
+    {
+      "file": "combined/logs/latest.log",
+      "line": 154,
+      "text": "[16:13:24] [main/INFO]: Mixing perf.remove_biome_temperature_cache.BiomeMixin from modernfix-common.mixins.json into net.minecraft.class_1959"
+    },
+    {
+      "file": "combined/logs/latest.log",
+      "line": 155,
+      "text": "[16:13:24] [main/WARN]: Method overwrite conflict for method_21740 in modernfix-common.mixins.json:perf.remove_biome_temperature_cache.BiomeMixin from mod modernfix, previously written by me.jellysquid.mods.lithium.mixin.world.temperature_cache.BiomeMixin. Skipping method."
+    },
+    {
+      "file": "combined/logs/latest.log",
+      "line": 244,
+      "text": "[16:13:27] [Server thread/INFO]: Mixing world.chunk_access.ServerChunkManagerMixin from lithium.mixins.json into net.minecraft.class_3215"
+    },
+    {
+      "file": "combined/logs/latest.log",
+      "line": 266,
+      "text": "[16:13:27] [Server thread/WARN]: Method overwrite conflict for removeIf in modernfix-common.mixins.json:bugfix.paper_chunk_patches.SortedArraySetMixin from mod modernfix, previously written by me.jellysquid.mods.lithium.mixin.collections.chunk_tickets.SortedArraySetMixin. Skipping method."
+    }
+  ],
+  "selectionEvidence": {
+    "file": "combined/config/modernfix-mixins.properties",
+    "line": 32,
+    "text": "#  mixin.feature.stalled_chunk_load_detection=false # (default)",
+    "pluginInspection": "ModernFixMixinPlugin.javap.txt:873–903 shouldApplyMixinはisOptionEnabled=falseでfalseを返す。",
+    "overrides": 0
+  },
+  "assessment": {
+    "staticRuleMismatchObserved": 0,
+    "confirmedNewScannerBugs": 0,
+    "allMergeConflictWarningSitesObserved": 2,
+    "warningSitesWithFinding": 1,
+    "warningSitesWithUnsupportedDiagnosticOnly": 1,
+    "semanticCompatibility": "不明",
+    "note": "この2警告地点は単一runの観測。警告にならない干渉や非ロード対象を網羅せず、recallの母数には使わない。"
+  }
+}

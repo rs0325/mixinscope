@@ -2,13 +2,13 @@
 
 Minecraft Mod の JAR を実行せずに読み、Mixin の適用対象と潜在的な互換性リスクを調査する CLI です。
 
-**開発版です。** 静的な変更箇所の重複と危険度の候補を報告します。実際の Modpack の互換性やクラッシュを確定するものではありません。
+静的な変更箇所の重複と危険度の候補を報告します。正式版でも、実際の Modpack の互換性やクラッシュを確定するものではありません。
 
-## 配布候補から使う
+## 配布版から使う
 
-初回プレリリース候補は `0.1.0-alpha.1` です。現在は公開準備中。ZIP / TARを展開した場合、macOS / Linuxは `./mixinscope-0.1.0-alpha.1/bin/mixinscope`、Windowsは `mixinscope-0.1.0-alpha.1\bin\mixinscope.bat` を使います。`bin`と`lib`を一緒に保持してください。通常の解析にはJava 21以上だけが必要です。
+初回正式版は `0.1.0` です。[GitHub Release](https://github.com/rs0325/mixinscope/releases/tag/v0.1.0)のZIP / TARを利用します。ZIP / TARを展開した場合、macOS / Linuxは `./mixinscope-0.1.0/bin/mixinscope`、Windowsは `mixinscope-0.1.0\bin\mixinscope.bat` を使います。`bin`と`lib`を一緒に保持してください。通常の解析にはJava 21以上だけが必要です。
 
-[公開候補の利用手順・リリースノート](docs/release-notes.md) · [公開準備と検証](docs/release-preparation.md) · [同梱依存のlicense / notice](THIRD-PARTY.md)
+[利用手順・リリースノート](docs/release-notes.md) · [公開準備と検証](docs/release-preparation.md) · [同梱依存のlicense / notice](THIRD-PARTY.md)
 
 ## 必要環境とビルド
 
@@ -164,7 +164,7 @@ python3 tools/verify-real-mods.py --download
 # 2回目以降は download オプションなしで検証済み cache を利用
 ```
 
-版・入手元・SHA-512 / SHA-256 / SHA-1 は [manifest](docs/real-mods-manifest.json)、固定 corpus の検証結果と限界は [検証ガイド](docs/validation.md) に記録しています。[判定根拠の評価](docs/evidence-evaluation.md)では、自作runtime対照14ケースと静的判定の対応、および固定実Modの宣言照合を記録しています。Minecraft上のprecision / recallは未測定です。取得した Mod JAR と plugin は実行しません。第三者 JAR は commit しません。通常・長い名前・253件・空レポートは実Chromeで目視とキーボード操作を確認済みです（[観測記録](docs/html-verification.md)）。
+版・入手元・SHA-512 / SHA-256 / SHA-1 は [manifest](docs/real-mods-manifest.json)、固定 corpus の検証結果と限界は [検証ガイド](docs/validation.md) に記録しています。[判定根拠の評価](docs/evidence-evaluation.md)では、自作runtime対照14ケースと静的判定の対応、および固定実Modの宣言照合を記録しています。[実Minecraftの追加対照](docs/minecraft-runtime-validation.md)では、固定2 Modの専用server 4構成でHIGH候補3件の適用・スキップ・非選択を確認しました。Minecraft上のprecision / recallとModpack全体の互換性は未確定です。通常の解析・静的corpus検証では取得したMod JARとpluginを実行しません。承認済みの追加対照だけが別環境で実Minecraftと固定Modを実行します。第三者JARはcommitしません。通常・長い名前・253件・空レポートは実Chromeで目視とキーボード操作を確認済みです（[観測記録](docs/html-verification.md)）。
 
 [初期設計](https://github.com/rs0325/mixinscope/issues/1) · [開発 Issue](https://github.com/rs0325/mixinscope/issues) · [Report schema](docs/report.schema.json)
 

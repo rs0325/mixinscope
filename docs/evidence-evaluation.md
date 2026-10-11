@@ -2,7 +2,7 @@
 
 固定実Mod6レポートの分類を集計し、FabricのMod間HIGH候補全3件をJARの宣言と照合した。自作14ケースは同じjavac成果物の静的解析と実Mixin変換の観測を対応付け、全件が期待するrule / severity / confidence / coverageと一致した。[機械可読結果](evidence-results.json)に対象ID、class hash、宣言、観測を保存する。
 
-これは静的な根拠と制御された自作実行の評価である。実Minecraftのクラッシュ・振る舞いの正解データはないため、実Modに対するprecision / recall、false positive / false negative率は未測定。LOWは無害を保証せず、HIGHはクラッシュを意味しない。宣言一致は同時適用の証明ではない。
+これは静的な根拠と制御された自作実行の評価である。この2026-10-10の評価では実Minecraftのクラッシュ・振る舞いの正解データを取得していないため、実Modに対するprecision / recall、false positive / false negative率は未測定。LOWは無害を保証せず、HIGHはクラッシュを意味しない。宣言一致は同時適用の証明ではない。
 
 ## 固定実Modの内訳
 
@@ -58,3 +58,7 @@ python3 tools/evaluate-evidence.py --real
 ```
 
 CIは14ケースの対応付けを3 OSで実行し、静的report、runtime観測、比較結果をartifactへ保存する。実Mod照合は手動のopt-in検証。比較ツールは未生成report、profile / contract変更、期待する分類・観測の不一致、JAR hash不一致、確認済みHIGHの標本変更を失敗として扱う。結果は`build/evidence-review/`に書く。公開済み結果は今回の固定corpusによる記録で、第三者JAR・class bytecode・javap全文を再配布しない。
+
+## 実Minecraftの追加対照
+
+#19では別途、固定Lithium / ModernFixの専用server 4構成を実行し、静的HIGH候補3件の適用・スキップ・非選択とNBT・chunk操作を照合した。[手順と観測結果](minecraft-runtime-validation.md)を参照。上記の静的corpus / 自作14ケースの結果や正解ラベルを上書きするものではなく、Minecraftのprecision / recallは引き続き未算出。

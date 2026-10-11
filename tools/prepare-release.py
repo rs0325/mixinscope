@@ -25,7 +25,7 @@ def sha(data):
 
 def main():
     version = (ROOT / 'VERSION').read_text().strip()
-    require(re.fullmatch(r'\d+\.\d+\.\d+-alpha\.\d+', version), 'Expected an alpha version')
+    require(re.fullmatch(r'\d+\.\d+\.\d+(?:-alpha\.\d+)?', version), '正式版またはalpha版のバージョンが必要です')
     name = 'mixinscope-' + version
     zip_path = ROOT / 'build/distributions' / (name + '.zip')
     tar_path = ROOT / 'build/distributions' / (name + '.tar')
